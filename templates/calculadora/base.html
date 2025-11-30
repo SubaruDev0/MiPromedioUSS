@@ -23,7 +23,7 @@
             <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-secondary);">Hola, {{ user.username|title }}</span>
         </div>
         <div class="header-center" style="flex: 2; text-align: center;">
-            {% if user.perfilusuario.carrera %}
+            {% if user.perfilusuario and user.perfilusuario.carrera %}
             <div
                 style="display: inline-block; padding: 6px 16px; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); border-radius: var(--radius-pill); box-shadow: var(--shadow-md);">
                 <span style="font-size: 0.9rem; font-weight: 700; color: white; letter-spacing: 0.3px;">{{ user.perfilusuario.carrera.nombre }}</span>
