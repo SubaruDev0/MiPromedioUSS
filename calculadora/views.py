@@ -266,18 +266,26 @@ def register(request):
     if request.method == 'POST':
         form = RegistroUsuarioForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Obtener o crear la carrera
-            carrera_nombre = form.cleaned_data.get('carrera')
-            if carrera_nombre:
-                carrera, _ = Carrera.objects.get_or_create(
-                    nombre=carrera_nombre,
-                    defaults={'codigo': carrera_nombre[:3].upper()}
-                )
-                PerfilUsuario.objects.create(user=user, carrera=carrera)
-            
-            login(request, user)
-            return redirect('dashboard')
+            try:
+                user = form.save()
+                # Obtener o crear la carrera (si existe el campo)
+                carrera_nombre = form.cleaned_data.get('carrera')
+                if carrera_nombre:
+                    try:
+                        carrera, _ = Carrera.objects.get_or_create(
+                            nombre=carrera_nombre,
+                            defaults={'codigo': carrera_nombre[:3].upper()}
+                        )
+                        PerfilUsuario.objects.create(user=user, carrera=carrera)
+                    except Exception as e:
+                        # Si falla la creación del perfil, continuar igual
+                        print(f"Error creando perfil: {e}")
+                
+                login(request, user)
+                return redirect('dashboard')
+            except Exception as e:
+                # Agregar el error al formulario
+                form.add_error(None, f"Error al crear usuario: {str(e)}")
     else:
         form = RegistroUsuarioForm()
     return render(request, 'registration/register.html', {'form': form})

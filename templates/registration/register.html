@@ -17,7 +17,21 @@
             {% for field in form %}
             <div class="input-group" style="margin-bottom: 20px;">
                 <label style="margin-bottom: 8px; display: block; font-weight: 600;">{{ field.label }}</label>
+                
+                {% if 'password' in field.name %}
+                <div style="position: relative;">
+                    {{ field }}
+                    <button type="button" class="toggle-password" 
+                            onclick="togglePassword('{{ field.auto_id }}')"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                   background: none; border: none; cursor: pointer; color: var(--text-light);">
+                        👁️
+                    </button>
+                </div>
+                {% else %}
                 {{ field }}
+                {% endif %}
+                
                 {% if field.help_text %}
                 <div style="color: var(--text-light); font-size: 0.75rem; margin-top: 4px;">
                     {{ field.help_text|safe }}
@@ -67,4 +81,19 @@
         box-shadow: 0 0 0 2px rgba(0, 45, 114, 0.1);
     }
 </style>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = event.target;
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        button.textContent = '🙈';
+    } else {
+        field.type = 'password';
+        button.textContent = '👁️';
+    }
+}
+</script>
 {% endblock %}
