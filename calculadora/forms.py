@@ -54,4 +54,18 @@ class RegistroUsuarioForm(UserCreationForm):
         # Remover el validador por defecto de Django que no permite espacios
         if 'username' in self.fields:
             self.fields['username'].validators = [self.username_validator]
+    
+    def clean_username(self):
+        """Sobrescribir validación de username para permitir espacios"""
+        username = self.cleaned_data.get('username')
+        # Validar longitud
+        if len(username) > 150:
+            raise forms.ValidationError('El nombre de usuario no puede tener más de 150 caracteres.')
+        # Validar con nuestro regex personalizado (permite espacios)
+        if not self.username_validator.regex.match(username):
+            raise forms.ValidationError(self.username_validator.message)
+        # Validar que no exista otro usuario con ese nombre
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError('Este nombre de usuario ya está en uso.')
+        return username
 
