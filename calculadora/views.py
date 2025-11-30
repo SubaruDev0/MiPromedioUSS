@@ -20,51 +20,18 @@ def dashboard(request):
     Dashboard principal del usuario (Mis Notas).
     Muestra ramos del período más reciente como actuales, y el resto como históricos.
     """
-    # Obtener todos los ramos del usuario ordenados por período
-    todos_ramos = Ramo.objects.filter(usuario=request.user).order_by('-anio_academico', '-semestre', '-created_at')
+    try:
+        # Obtener todos los ramos del usuario ordenados por período
+        todos_ramos = Ramo.objects.filter(usuario=request.user).order_by('-anio_academico', '-semestre', '-created_at')
 
-    if todos_ramos.exists():
-        # Determinar el período más reciente (mayor año + semestre)
-        ultimo_ramo = todos_ramos.first()
-        anio_actual = ultimo_ramo.anio_academico
-        semestre_actual = ultimo_ramo.semestre
+        if todos_ramos.exists():
+            # Determinar el período más reciente (mayor año + semestre)
+            ultimo_ramo = todos_ramos.first()
+            anio_actual = ultimo_ramo.anio_academico
+            semestre_actual = ultimo_ramo.semestre
 
-        # Convertir a formato legible
-        anio_num = dict(Ramo.ANIO_CHOICES).get(anio_actual, f'Año {anio_actual}')
-
-        # Mapa de conversiones
-        conversion_map = {
-            'Primero': 'Primer año',
-            'Segundo': 'Segundo año',
-            'Tercero': 'Tercer año',
-            'Cuarto': 'Cuarto año',
-            'Quinto': 'Quinto año',
-            'Sexto': 'Sexto año',
-            'Séptimo': 'Séptimo año',
-            'Octavo': 'Octavo año',
-            'Noveno': 'Noveno año',
-            'Décimo': 'Décimo año',
-        }
-
-        anio_actual_label = conversion_map.get(anio_num, anio_num)
-        semestre_actual_label = f'Semestre {semestre_actual}'
-
-        # Ramos actuales: del período más reciente
-        ramos = todos_ramos.filter(anio_academico=anio_actual, semestre=semestre_actual)
-
-        # Calcular promedio del período actual (se hará después de calcular promedios individuales)
-        promedio_actual_periodo = 0
-
-        # Ramos históricos: todos los demás, ordenados por período descendente (año desc, semestre asc)
-        ramos_historicos_query = todos_ramos.exclude(anio_academico=anio_actual, semestre=semestre_actual).order_by('-anio_academico', 'semestre')
-
-        # Agrupar históricos por año y semestre (primero por año, luego semestres dentro)
-        from collections import OrderedDict
-        ramos_historicos_agrupados = OrderedDict()
-
-        for ramo in ramos_historicos_query:
-            # Convertir el label a formato "Primer año", "Segundo año", etc.
-            anio_num = dict(Ramo.ANIO_CHOICES).get(ramo.anio_academico, f'Año {ramo.anio_academico}')
+            # Convertir a formato legible
+            anio_num = dict(Ramo.ANIO_CHOICES).get(anio_actual, f'Año {anio_actual}')
 
             # Mapa de conversiones
             conversion_map = {
@@ -80,86 +47,131 @@ def dashboard(request):
                 'Décimo': 'Décimo año',
             }
 
-            anio_label = conversion_map.get(anio_num, anio_num)
+            anio_actual_label = conversion_map.get(anio_num, anio_num)
+            semestre_actual_label = f'Semestre {semestre_actual}'
 
-            # Crear estructura: año -> semestres -> ramos
-            if ramo.anio_academico not in ramos_historicos_agrupados:
-                ramos_historicos_agrupados[ramo.anio_academico] = {
-                    'label': anio_label,
-                    'semestres': OrderedDict()
+            # Ramos actuales: del período más reciente
+            ramos = todos_ramos.filter(anio_academico=anio_actual, semestre=semestre_actual)
+
+            # Calcular promedio del período actual (se hará después de calcular promedios individuales)
+            promedio_actual_periodo = 0
+
+            # Ramos históricos: todos los demás, ordenados por período descendente (año desc, semestre asc)
+            ramos_historicos_query = todos_ramos.exclude(anio_academico=anio_actual, semestre=semestre_actual).order_by('-anio_academico', 'semestre')
+
+            # Agrupar históricos por año y semestre (primero por año, luego semestres dentro)
+            from collections import OrderedDict
+            ramos_historicos_agrupados = OrderedDict()
+
+            for ramo in ramos_historicos_query:
+                # Convertir el label a formato "Primer año", "Segundo año", etc.
+                anio_num = dict(Ramo.ANIO_CHOICES).get(ramo.anio_academico, f'Año {ramo.anio_academico}')
+
+                # Mapa de conversiones
+                conversion_map = {
+                    'Primero': 'Primer año',
+                    'Segundo': 'Segundo año',
+                    'Tercero': 'Tercer año',
+                    'Cuarto': 'Cuarto año',
+                    'Quinto': 'Quinto año',
+                    'Sexto': 'Sexto año',
+                    'Séptimo': 'Séptimo año',
+                    'Octavo': 'Octavo año',
+                    'Noveno': 'Noveno año',
+                    'Décimo': 'Décimo año',
                 }
 
-            if ramo.semestre not in ramos_historicos_agrupados[ramo.anio_academico]['semestres']:
-                ramos_historicos_agrupados[ramo.anio_academico]['semestres'][ramo.semestre] = {
-                    'ramos': [],
-                    'promedio': 0
-                }
+                anio_label = conversion_map.get(anio_num, anio_num)
 
-            ramos_historicos_agrupados[ramo.anio_academico]['semestres'][ramo.semestre]['ramos'].append(ramo)
-    else:
-        ramos = Ramo.objects.none()
-        ramos_historicos_agrupados = OrderedDict()
-        anio_actual_label = None
-        semestre_actual_label = None
+                # Crear estructura: año -> semestres -> ramos
+                if ramo.anio_academico not in ramos_historicos_agrupados:
+                    ramos_historicos_agrupados[ramo.anio_academico] = {
+                        'label': anio_label,
+                        'semestres': OrderedDict()
+                    }
 
-    # Calcular promedios para todos los ramos
-    all_ramos_list = []
-    for anio_data in ramos_historicos_agrupados.values():
-        for semestre_data in anio_data['semestres'].values():
-            all_ramos_list.extend(semestre_data['ramos'])
+                if ramo.semestre not in ramos_historicos_agrupados[ramo.anio_academico]['semestres']:
+                    ramos_historicos_agrupados[ramo.anio_academico]['semestres'][ramo.semestre] = {
+                        'ramos': [],
+                        'promedio': 0
+                    }
 
-    all_ramos = list(ramos) + all_ramos_list
+                ramos_historicos_agrupados[ramo.anio_academico]['semestres'][ramo.semestre]['ramos'].append(ramo)
+        else:
+            ramos = Ramo.objects.none()
+            ramos_historicos_agrupados = OrderedDict()
+            anio_actual_label = None
+            semestre_actual_label = None
+            promedio_actual_periodo = 0
 
-    for ramo in all_ramos:
-        evaluaciones = ramo.evaluaciones.all()
-        if evaluaciones:
-            weighted_sum = sum(e.nota * e.ponderacion for e in evaluaciones if e.nota)
-            total_weight = sum(e.ponderacion for e in evaluaciones if e.nota)
-            if total_weight > 0:
-                ramo.promedio_actual = round(weighted_sum / total_weight, 1)
+        # Calcular promedios para todos los ramos
+        all_ramos_list = []
+        for anio_data in ramos_historicos_agrupados.values():
+            for semestre_data in anio_data['semestres'].values():
+                all_ramos_list.extend(semestre_data['ramos'])
+
+        all_ramos = list(ramos) + all_ramos_list
+
+        for ramo in all_ramos:
+            evaluaciones = ramo.evaluaciones.all()
+            if evaluaciones:
+                weighted_sum = sum(e.nota * e.ponderacion for e in evaluaciones if e.nota)
+                total_weight = sum(e.ponderacion for e in evaluaciones if e.nota)
+                if total_weight > 0:
+                    ramo.promedio_actual = round(weighted_sum / total_weight, 1)
+                else:
+                    ramo.promedio_actual = 0
             else:
                 ramo.promedio_actual = 0
-        else:
-            ramo.promedio_actual = 0
 
-        # Convertir nota_objetivo de escala 1-7 a escala 10-70 para mostrar
-        ramo.nota_objetivo_display = round(ramo.nota_objetivo * 10, 1)
-    
-    # Calcular promedio del período actual
-    if ramos:
-        promedios_ramos_actuales = [r.promedio_actual for r in ramos if r.promedio_actual > 0]
-        if promedios_ramos_actuales:
-            promedio_actual_periodo = round(sum(promedios_ramos_actuales) / len(promedios_ramos_actuales), 1)
-        else:
-            promedio_actual_periodo = 0
-    
-    # Calcular promedios por semestre y año
-    for anio_academico, anio_data in ramos_historicos_agrupados.items():
-        promedios_anio = []
+            # Convertir nota_objetivo de escala 1-7 a escala 10-70 para mostrar
+            ramo.nota_objetivo_display = round(ramo.nota_objetivo * 10, 1)
+        
+        # Calcular promedio del período actual
+        if ramos:
+            promedios_ramos_actuales = [r.promedio_actual for r in ramos if r.promedio_actual > 0]
+            if promedios_ramos_actuales:
+                promedio_actual_periodo = round(sum(promedios_ramos_actuales) / len(promedios_ramos_actuales), 1)
+            else:
+                promedio_actual_periodo = 0
+        
+        # Calcular promedios por semestre y año
+        for anio_academico, anio_data in ramos_historicos_agrupados.items():
+            promedios_anio = []
 
-        for semestre, semestre_data in anio_data['semestres'].items():
-            ramos_semestre = semestre_data['ramos']
-            if ramos_semestre:
-                promedios_ramos = [r.promedio_actual for r in ramos_semestre if r.promedio_actual > 0]
-                if promedios_ramos:
-                    semestre_data['promedio'] = round(sum(promedios_ramos) / len(promedios_ramos), 1)
-                    promedios_anio.append(semestre_data['promedio'])
-                else:
-                    semestre_data['promedio'] = 0
+            for semestre, semestre_data in anio_data['semestres'].items():
+                ramos_semestre = semestre_data['ramos']
+                if ramos_semestre:
+                    promedios_ramos = [r.promedio_actual for r in ramos_semestre if r.promedio_actual > 0]
+                    if promedios_ramos:
+                        semestre_data['promedio'] = round(sum(promedios_ramos) / len(promedios_ramos), 1)
+                        promedios_anio.append(semestre_data['promedio'])
+                    else:
+                        semestre_data['promedio'] = 0
 
-        # Calcular promedio del año
-        if promedios_anio:
-            anio_data['promedio'] = round(sum(promedios_anio) / len(promedios_anio), 1)
-        else:
-            anio_data['promedio'] = 0
+            # Calcular promedio del año
+            if promedios_anio:
+                anio_data['promedio'] = round(sum(promedios_anio) / len(promedios_anio), 1)
+            else:
+                anio_data['promedio'] = 0
 
-    return render(request, 'calculadora/dashboard.html', {
-        'ramos': ramos,
-        'ramos_historicos_agrupados': ramos_historicos_agrupados,
-        'anio_actual_label': anio_actual_label,
-        'semestre_actual_label': semestre_actual_label,
-        'promedio_actual_periodo': promedio_actual_periodo,
-    })
+        return render(request, 'calculadora/dashboard.html', {
+            'ramos': ramos,
+            'ramos_historicos_agrupados': ramos_historicos_agrupados,
+            'anio_actual_label': anio_actual_label,
+            'semestre_actual_label': semestre_actual_label,
+            'promedio_actual_periodo': promedio_actual_periodo,
+        })
+    except Exception as e:
+        # Si hay error, mostrar dashboard vacío
+        print(f"Error en dashboard: {e}")
+        return render(request, 'calculadora/dashboard.html', {
+            'ramos': Ramo.objects.none(),
+            'ramos_historicos_agrupados': {},
+            'anio_actual_label': None,
+            'semestre_actual_label': None,
+            'promedio_actual_periodo': 0,
+        })
 
 @login_required
 def ramo_detail(request, ramo_id):
