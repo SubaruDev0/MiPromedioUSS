@@ -1,0 +1,23 @@
+{% extends 'calculadora/base.html' %}
+
+{% block content %}
+<div class="container" style="padding-top:20px;">
+    <div class="calculator-card">
+        <h2 style="color: var(--primary-color);">Notificaciones</h2>
+        <div style="margin-top:12px;">
+            {% if notifications %}
+                <ul style="list-style:none; padding:0; margin:0;">
+                    {% for n in notifications %}
+                    <li style="padding:10px; border-bottom:1px solid var(--divider-color);">
+                        <div style="font-weight:600;">{{ n.message }}</div>
+                        <div style="font-size:0.85rem; color:var(--text-light);">{{ n.created_at }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div style="padding:12px; color:var(--text-secondary);">No hay notificaciones.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

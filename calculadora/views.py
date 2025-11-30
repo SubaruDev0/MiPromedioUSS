@@ -10,6 +10,11 @@ from django.core.cache import cache
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.views.decorators.http import require_POST
+from django import forms
+from django.utils import timezone
 
 def home(request):
     """
@@ -208,6 +213,83 @@ def admin_panel(request):
         'users_count': users.count()
     })
 
+
+@login_required
+def notifications_view(request):
+    """Mostrar notificaciones guardadas en cache para el usuario."""
+    key = f'notifications:{request.user.id}'
+    notifications = cache.get(key, [])
+    return render(request, 'calculadora/notifications.html', {'notifications': notifications})
+
+
+@login_required
+def profile_view(request):
+    """Mostrar y editar datos de perfil (username, email)."""
+    class UsernameForm(forms.Form):
+        username = forms.CharField(max_length=150)
+
+    if request.method == 'POST':
+        form = UsernameForm(request.POST)
+        if form.is_valid():
+            new_username = form.cleaned_data['username']
+            # Validar unicidad
+            if User.objects.exclude(id=request.user.id).filter(username=new_username).exists():
+                messages.error(request, 'El nombre de usuario ya está en uso.')
+            else:
+                request.user.username = new_username
+                request.user.save()
+                messages.success(request, 'Nombre de usuario actualizado.')
+                return redirect('profile')
+    else:
+        form = UsernameForm(initial={'username': request.user.username})
+
+    return render(request, 'calculadora/profile.html', {'form': form})
+
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Contraseña actualizada correctamente.')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Corrige los errores en el formulario.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'calculadora/change_password.html', {'form': form})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+@require_POST
+def admin_delete_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        if user.is_superuser:
+            messages.error(request, 'No puedes eliminar a otro superusuario.')
+        else:
+            user.delete()
+            messages.success(request, f'Usuario {user.username} eliminado.')
+    except User.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado.')
+    return redirect('admin_panel')
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_user_ramos(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado.')
+        return redirect('admin_panel')
+
+    ramos = Ramo.objects.filter(usuario=user).order_by('-anio_academico', '-semestre')
+    return render(request, 'calculadora/admin_user_ramos.html', {'target_user': user, 'ramos': ramos})
+
 @login_required
 def add_course(request):
     if request.method == 'POST':
@@ -250,7 +332,20 @@ def add_course(request):
                         ponderacion=float(eval_weights[i]),
                         ramo=ramo
                     )
-            
+            # Añadir notificación en cache para el usuario
+            try:
+                key = f'notifications:{request.user.id}'
+                notifications = cache.get(key, [])
+                notifications.insert(0, {
+                    'message': f"Ramo '{ramo.nombre}' creado exitosamente.",
+                    'created_at': timezone.now().isoformat(),
+                    'link': ''
+                })
+                # Mantener sólo las 25 más recientes
+                cache.set(key, notifications[:25], None)
+            except Exception:
+                pass
+
             return redirect('dashboard')
         except Exception as e:
             print(f"Error al crear ramo: {e}")

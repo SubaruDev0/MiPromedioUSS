@@ -17,4 +17,9 @@ urlpatterns = [
     path('delete_evaluacion/<int:evaluacion_id>/', views.delete_evaluacion, name='delete_evaluacion'),
     path('save_nota_objetivo/<int:ramo_id>/', views.save_nota_objetivo, name='save_nota_objetivo'),
     path('admin-panel/', views.admin_panel, name='admin_panel'),
+    path('admin-panel/user/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
+    path('admin-panel/user/<int:user_id>/ramos/', views.admin_user_ramos, name='admin_user_ramos'),
+    path('notifications/', views.notifications_view, name='notifications'),
+    path('profile/', views.profile_view, name='profile'),
+    path('profile/change-password/', views.change_password_view, name='change_password'),
 ]

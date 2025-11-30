@@ -1,0 +1,21 @@
+{% extends 'calculadora/base.html' %}
+
+{% block content %}
+<div class="container" style="padding-top:20px;">
+    <div class="calculator-card">
+        <h2 style="color:var(--primary-color);">Ramos de {{ target_user.username }}</h2>
+        {% if ramos %}
+        <ul style="list-style:none; padding:0; margin:0;">
+            {% for ramo in ramos %}
+            <li style="padding:10px; border-bottom:1px solid var(--divider-color);">
+                <div style="font-weight:600">{{ ramo.nombre }}</div>
+                <div style="font-size:0.85rem; color:var(--text-light)">Año: {{ ramo.anio_academico }}, Semestre: {{ ramo.semestre }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div style="padding:12px; color:var(--text-secondary);">El usuario no tiene ramos.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
