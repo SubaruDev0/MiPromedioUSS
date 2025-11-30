@@ -1,0 +1,320 @@
+{% extends 'calculadora/base.html' %}
+{% load l10n %}
+
+{% block content %}
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('actual')">Período actual</div>
+    <div class="tab" onclick="switchTab('historicas')">Históricas</div>
+    <a href="{% url 'add_course' %}" class="btn-primary"
+        style="margin-left: auto; text-decoration: none; font-size: 0.9rem; padding: 8px 16px; height: auto; width: auto; box-shadow: none;">
+        <i class="fas fa-plus"></i> Nuevo Ramo
+    </a>
+</div>
+
+<div class="container" id="ramos-list">
+    {% if ramos %}
+    <!-- Títulos del período actual -->
+    {% if anio_actual_label %}
+    <h2 style="color: var(--primary-color); font-size: 1.3rem; margin-bottom: 10px; padding-left: 10px; border-left: 4px solid var(--primary-color);">
+        {{ anio_actual_label }}
+        <span style="font-size: 0.9rem; color: var(--text-light); margin-left: 10px;">
+            (Promedio: {{ promedio_actual_periodo|floatformat:1 }})
+        </span>
+    </h2>
+    <h3 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 20px; padding-left: 20px;">
+        {{ semestre_actual_label }}
+        <span style="font-size: 0.85rem; color: var(--text-light); margin-left: 8px;">
+            (Promedio: {{ promedio_actual_periodo|floatformat:1 }})
+        </span>
+    </h3>
+    {% endif %}
+
+    {% for ramo in ramos %}
+    <div class="course-card" data-ramo-id="{{ ramo.id }}" data-nota-objetivo="{{ ramo.nota_objetivo }}">
+        <div class="course-header" onclick="toggleCourse(this)">
+            <div class="course-title">
+                {{ ramo.nombre }}
+                <span style="font-size: 0.85rem; color: var(--text-light); margin-left: 8px;">
+                    (Promedio: <span class="header-promedio">{{ ramo.promedio_actual|floatformat:1 }}</span>)
+                </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="{% url 'edit_course' ramo.id %}" class="btn-icon"
+                    style="color: var(--text-light); cursor: pointer;" title="Editar Ramo">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="{% url 'delete_course' ramo.id %}" method="post"
+                    onsubmit="return confirm('¿Estás seguro de eliminar este ramo?');" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit"
+                        style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 5px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+        <div class="course-content">
+            <!-- Selector de nota objetivo -->
+            <div style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: var(--radius-sm);">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; display: block;">¿Qué nota final quieres tener?</label>
+                <select class="nota-objetivo-tipo" onchange="toggleNotaObjetivoRamo(this)" data-ramo-id="{{ ramo.id }}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9rem; margin-bottom: 8px;">
+                    <option value="pasar" {% if ramo.nota_objetivo == 3.95 %}selected{% endif %}>Pasar es pasar (39.5)</option>
+                    <option value="custom" {% if ramo.nota_objetivo != 3.95 %}selected{% endif %}>Ingresar otra nota objetivo</option>
+                </select>
+                <div class="nota-objetivo-custom-container" style="{% if ramo.nota_objetivo == 3.95 %}display: none;{% endif %}">
+                    <input type="number" class="nota-objetivo-custom-input" placeholder="Ingresa tu nota objetivo (10-70)" min="10" max="70" step="0.1" value="{% if ramo.nota_objetivo != 3.95 %}{{ ramo.nota_objetivo_display }}{% endif %}" onchange="updateNotaObjetivoCustom(this)" data-ramo-id="{{ ramo.id }}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                </div>
+            </div>
+
+            <table class="grades-table">
+                <thead>
+                    <tr>
+                        <th class="w-60">Evaluación</th>
+                        <th class="w-20 text-center">Nota</th>
+                        <th class="w-20 text-center">Pond.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for evaluacion in ramo.evaluaciones.all %}
+                    <tr class="evaluacion-row" data-ponderacion="{{ evaluacion.ponderacion }}"
+                        data-evaluacion-id="{{ evaluacion.id }}">
+                        <td>{{ evaluacion.nombre }}</td>
+                        <td class="text-center">
+                            <input type="number" class="grade-pill {% if not evaluacion.nota %}empty{% endif %}" placeholder="--" min="10" max="70" step="0.1" value="{% if evaluacion.nota %}{{ evaluacion.nota|unlocalize }}{% endif %}" oninput="calculateAverage(this)" onchange="saveGrade(this, {{ evaluacion.id }})">
+                        </td>
+                        <td class="text-center" style="color: var(--text-light); font-weight: 500;">{{ evaluacion.ponderacion|floatformat:0 }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="summary-label">Promedio Actual:</span>
+                    <span class="summary-value promedio-actual" style="color: var(--primary-color);">{{ ramo.promedio_actual|default:"--" }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Nota Objetivo:</span>
+                    <span class="summary-value nota-objetivo-display" style="color: var(--accent-color); font-weight: 700;">{{ ramo.nota_objetivo_display }}</span>
+                </div>
+
+                <!-- Sección de repete (igual que calculadora rápida) -->
+                <div class="repete-ramo-section" style="display: none; margin-top: 15px;">
+                    <div style="padding: 12px; background-color: #fff3cd; border-radius: var(--radius-sm); border-left: 4px solid #ffc107; margin-bottom: 15px;">
+                        <div style="font-weight: 600; color: #856404;">
+                            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                            <span class="repete-mensaje">Promedio bajo 39.5. Deberás dar el Repete.</span>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Nota Repete</label>
+                            <input type="number" class="repete-grade-input" placeholder="Ej: 50" min="10" max="70" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; display: block;">Modo de Reemplazo</label>
+                            <select class="repete-mode-select" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                                <option value="lowest">Reemplazar nota más baja</option>
+                                <option value="highest_weight">Reemplazar % más alto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="summary-label">Promedio Final:</span>
+                        <span class="promedio-final" style="color: var(--primary-color); font-weight: 700;">--</span>
+                    </div>
+
+                    <!-- Mensaje de resultado dentro de sección de repete -->
+                    <div class="resultado-ramo-repete" style="display: none; margin-top: 15px; padding: 12px; border-radius: var(--radius-sm); text-align: center; font-weight: 600;"></div>
+                </div>
+            </div>
+
+            <div class="requirements-header">
+                <i class="fas fa-info-circle"></i> Requerimientos del ramo
+            </div>
+            <div class="requirement-item">
+                ASISTENCIA {{ ramo.asistencia }}%
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: var(--text-light);">
+        <i class="fas fa-book" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+        <p>No tienes ramos inscritos para este período.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="container" id="ramos-historicos-list" style="display: none;">
+    {% if ramos_historicos_agrupados %}
+        {% for anio_academico, anio_data in ramos_historicos_agrupados.items %}
+        <div style="margin-bottom: 40px;">
+            <!-- Título del Año con Promedio -->
+            <h2 style="color: var(--primary-color); font-size: 1.3rem; margin-bottom: 20px; padding-left: 10px; border-left: 4px solid var(--primary-color);">
+                {{ anio_data.label }}
+                <span style="font-size: 0.9rem; color: var(--text-light); margin-left: 10px;">
+                    (Promedio: {{ anio_data.promedio|floatformat:1 }})
+                </span>
+            </h2>
+
+            <!-- Iterar por semestres dentro del año -->
+            {% for semestre, semestre_data in anio_data.semestres.items %}
+            <div style="margin-bottom: 25px; margin-left: 20px;">
+                <!-- Título del Semestre con Promedio -->
+                <h3 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 15px;">
+                    Semestre {{ semestre }}
+                    <span style="font-size: 0.85rem; color: var(--text-light); margin-left: 8px;">
+                        (Promedio: {{ semestre_data.promedio|floatformat:1 }})
+                    </span>
+                </h3>
+
+                <!-- Ramos del Semestre -->
+                {% for ramo in semestre_data.ramos %}
+                <div class="course-card" data-ramo-id="{{ ramo.id }}" data-nota-objetivo="{{ ramo.nota_objetivo }}" style="margin-bottom: 15px;">
+                    <div class="course-header" onclick="toggleCourse(this)">
+                        <div class="course-title">
+                            {{ ramo.nombre }}
+                            <span style="font-size: 0.85rem; color: var(--text-light); margin-left: 8px;">
+                                (Promedio: <span class="header-promedio-historico">{{ ramo.promedio_actual|floatformat:1 }}</span>)
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <a href="{% url 'edit_course' ramo.id %}" class="btn-icon"
+                                style="color: var(--text-light); cursor: pointer;" title="Editar Ramo">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <table class="grades-table">
+                            <thead>
+                                <tr>
+                                    <th class="w-60">Evaluación</th>
+                                    <th class="w-20 text-center">Nota</th>
+                                    <th class="w-20 text-center">Pond.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evaluacion in ramo.evaluaciones.all %}
+                                <tr class="evaluacion-row" data-ponderacion="{{ evaluacion.ponderacion }}"
+                                    data-evaluacion-id="{{ evaluacion.id }}">
+                                    <td>{{ evaluacion.nombre }}</td>
+                                    <td class="text-center">
+                                        <input type="number" class="grade-pill {% if not evaluacion.nota %}empty{% endif %}" placeholder="--" min="10" max="70" step="0.1" value="{% if evaluacion.nota %}{{ evaluacion.nota|unlocalize }}{% endif %}" oninput="calculateAverageHistorico(this)" onchange="saveGrade(this, {{ evaluacion.id }})">
+                                    </td>
+                                    <td class="text-center" style="color: var(--text-light); font-weight: 500;">{{ evaluacion.ponderacion|floatformat:0 }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="summary-section">
+                            <div class="summary-row">
+                                <span class="summary-label">Promedio Final:</span>
+                                <span class="summary-value" style="color: var(--primary-color);">{{ ramo.promedio_actual|floatformat:1 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: var(--text-light);">
+        <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+        <p>No tienes ramos históricos.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function switchTab(tab) {
+        const tabs = document.querySelectorAll('.tab');
+        const actualList = document.getElementById('ramos-list');
+        const historicasList = document.getElementById('ramos-historicos-list');
+
+        tabs.forEach(t => t.classList.remove('active'));
+
+        if (tab === 'actual') {
+            tabs[0].classList.add('active');
+            actualList.style.display = 'block';
+            historicasList.style.display = 'none';
+        } else {
+            tabs[1].classList.add('active');
+            actualList.style.display = 'none';
+            historicasList.style.display = 'block';
+        }
+    }
+
+    // Guardar nota automáticamente
+    function saveGrade(input, evaluacionId) {
+        const nota = input.value;
+
+        console.log(`Guardando nota ${nota} para evaluación ${evaluacionId}`);
+
+        fetch(`/save_grade/${evaluacionId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ nota: nota })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Nota guardada exitosamente:', data.nota);
+                // Mostrar feedback visual breve
+                input.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    input.style.backgroundColor = '';
+                }, 500);
+            } else {
+                console.error('Error al guardar:', data.error);
+                alert('Error al guardar la nota: ' + (data.error || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error de red:', error);
+            alert('Error de conexión al guardar la nota');
+        });
+    }
+
+    // Eliminar evaluación
+    function deleteEvaluacion(evaluacionId, button) {
+        if (!confirm('¿Estás seguro de eliminar esta evaluación?')) {
+            return;
+        }
+
+        fetch(`/delete_evaluacion/${evaluacionId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Eliminar la fila de la tabla
+                const row = button.closest('tr');
+                row.remove();
+
+                // Recalcular el promedio
+                const courseCard = button.closest('.course-card');
+                const firstGrade = courseCard.querySelector('.grade-pill');
+                if (firstGrade) {
+                    calculateAverage(firstGrade);
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+{% endblock %}

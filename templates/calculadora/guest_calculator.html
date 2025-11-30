@@ -1,0 +1,448 @@
+{% extends 'calculadora/base.html' %}
+
+{% block content %}
+<div class="container" style="margin-top: 20px;">
+    <div class="calculator-card">
+        <h2 class="text-center" style="color: var(--primary-color); margin-bottom: 20px;">Calculadora Rápida</h2>
+
+        <!-- Selector de nota objetivo -->
+        <div class="input-group" style="margin-bottom: 20px;">
+            <label style="font-weight: 600; margin-bottom: 8px; display: block;">¿Qué nota final quieres tener?</label>
+            <select id="nota-objetivo-tipo" class="grade-input" onchange="toggleNotaObjetivoInput()" style="margin-bottom: 10px;">
+                <option value="pasar">Pasar es pasar (39.5)</option>
+                <option value="custom">Ingresar otra nota objetivo</option>
+            </select>
+            <div id="nota-objetivo-custom-container" style="display: none;">
+                <input type="number" id="nota-objetivo-custom" class="grade-input" placeholder="Ingresa tu nota objetivo (10-70)" min="10" max="70" step="0.1" oninput="calculateGuest()">
+            </div>
+        </div>
+
+        <div id="grades-container">
+            <!-- Initial Rows -->
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="Ej: 55" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="Ej: 25" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button class="btn-secondary" onclick="clearCalculator()">Limpiar</button>
+            <button class="btn-primary" onclick="addRow()"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <!-- Repete Section (Hidden by default) -->
+        <div id="repete-section" class="repete-section" style="display: none;">
+            <div class="alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Promedio bajo 39.5. Deberás dar el Repete.</span>
+            </div>
+
+            <div class="repete-controls">
+                <div class="input-group">
+                    <label>Nota Repete</label>
+                    <input type="number" id="repete-grade" class="grade-input" placeholder="Ej: 50" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Modo de Reemplazo</label>
+                    <select id="repete-mode" onchange="calculateGuest()">
+                        <option value="lowest">Reemplazar nota más baja</option>
+                        <option value="highest_weight">Reemplazar % más alto</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div class="result-box">
+                <div class="result-label">Promedio</div>
+                <div class="result-value" id="guest-average">--</div>
+            </div>
+            <div class="result-box">
+                <div class="result-label">Promedio Final</div>
+                <div class="result-value" id="guest-final-average">--</div>
+            </div>
+        </div>
+
+        <!-- Mensaje de resultado -->
+        <div id="resultado-mensaje" style="display: none; margin-top: 20px; padding: 15px; border-radius: var(--radius-sm); text-align: center; font-weight: 600; font-size: 1.1rem;">
+            <i id="resultado-icono" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+            <span id="resultado-texto"></span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .calculator-card {
+        background: var(--card-bg);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .grade-row {
+        display: flex;
+        gap: var(--spacing-md);
+        align-items: flex-end;
+        margin-bottom: var(--spacing-md);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .input-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .input-group label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .grade-input,
+    .weight-input,
+    select {
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-size: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .grade-input:focus,
+    .weight-input:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(0, 45, 114, 0.1);
+    }
+
+    .btn-remove {
+        background: #FFEBEE;
+        color: var(--danger-color);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        margin-bottom: 1px;
+        /* Align with input */
+    }
+
+    .btn-remove:hover {
+        background: #FFCDD2;
+    }
+
+    .actions-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 10px 20px;
+        border-radius: var(--radius-pill);
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-light);
+        transform: scale(1.05);
+    }
+
+    .btn-secondary {
+        background: #E0E0E0;
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+        background: #D6D6D6;
+    }
+
+    .results-container {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+        padding-top: var(--spacing-lg);
+        border-top: 1px solid var(--divider-color);
+    }
+
+    .result-box {
+        flex: 1;
+        background: #333;
+        /* Dark background like reference */
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        color: white;
+    }
+
+    .result-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        margin-bottom: 4px;
+    }
+
+    .result-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .repete-section {
+        background: #FFF3CD;
+        border: 1px solid #FFEEBA;
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .alert-warning {
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .repete-controls {
+        display: flex;
+        gap: var(--spacing-md);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    function addRow() {
+        const container = document.getElementById('grades-container');
+        const div = document.createElement('div');
+        div.className = 'grade-row';
+        div.innerHTML = `
+            <div class="input-group">
+                <label>Nota (10-70)</label>
+                <input type="number" class="grade-input" placeholder="" min="10" max="70" oninput="calculateGuest()">
+            </div>
+            <div class="input-group">
+                <label>Porcentaje (%)</label>
+                <input type="number" class="weight-input" placeholder="" min="0" max="100" oninput="calculateGuest()">
+            </div>
+            <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removeRow(btn) {
+        const row = btn.closest('.grade-row');
+        if (document.querySelectorAll('.grade-row').length > 1) {
+            row.remove();
+            calculateGuest();
+        }
+    }
+
+    function clearCalculator() {
+        document.querySelectorAll('.grade-input').forEach(i => i.value = '');
+        document.querySelectorAll('.weight-input').forEach(i => i.value = '');
+        document.getElementById('repete-section').style.display = 'none';
+        document.getElementById('guest-average').innerText = '--';
+        document.getElementById('guest-final-average').innerText = '--';
+    }
+
+    function calculateGuest() {
+        const rows = document.querySelectorAll('.grade-row');
+        let totalWeightedScore = 0;
+        let totalWeight = 0;
+        let grades = [];
+
+        rows.forEach(row => {
+            const gradeInput = row.querySelector('.grade-input');
+            const weightInput = row.querySelector('.weight-input');
+
+            let grade = parseFloat(gradeInput.value);
+            let weight = parseFloat(weightInput.value);
+
+            // Enforce limits immediately on input
+            if (gradeInput.value !== '') {
+                if (grade > 70) { grade = 70; gradeInput.value = 70; }
+                if (grade < 10 && gradeInput.value.length >= 2) { grade = 10; gradeInput.value = 10; } // Only clamp min if 2 digits typed to allow typing '1' then '0'
+            }
+
+            if (weightInput.value !== '') {
+                if (weight > 100) { weight = 100; weightInput.value = 100; }
+                if (weight < 0) { weight = 0; weightInput.value = 0; }
+            }
+
+            if (!isNaN(grade) && !isNaN(weight)) {
+                grades.push({ grade, weight });
+                totalWeightedScore += grade * (weight / 100);
+                totalWeight += weight;
+            }
+        });
+
+        const avgDisplay = document.getElementById('guest-average');
+        const finalAvgDisplay = document.getElementById('guest-final-average');
+        const repeteSection = document.getElementById('repete-section');
+
+        let currentAverage = 0;
+        if (totalWeight > 0) {
+            // Calculate average (scale 10-70)
+            currentAverage = totalWeightedScore / (totalWeight / 100);
+            avgDisplay.innerText = currentAverage.toFixed(1);
+        } else {
+            avgDisplay.innerText = '--';
+            finalAvgDisplay.innerText = '--';
+            repeteSection.style.display = 'none';
+            return;
+        }
+
+        // Repete Logic
+        // Trigger if total weight is approx 100% and average < 39.5
+        if (totalWeight >= 99.9 && currentAverage < 39.5) {
+            repeteSection.style.display = 'block';
+
+            const repeteGradeInput = document.getElementById('repete-grade');
+            let repeteGrade = parseFloat(repeteGradeInput.value);
+
+            if (repeteGradeInput.value !== '') {
+                if (repeteGrade > 70) { repeteGrade = 70; repeteGradeInput.value = 70; }
+                if (repeteGrade < 10 && repeteGradeInput.value.length >= 2) { repeteGrade = 10; repeteGradeInput.value = 10; }
+            }
+
+            const repeteMode = document.getElementById('repete-mode').value;
+
+            if (!isNaN(repeteGrade)) {
+                let finalGrades = JSON.parse(JSON.stringify(grades)); // Deep copy
+
+                if (repeteMode === 'lowest') {
+                    // Replace lowest grade
+                    let minGradeIndex = 0;
+                    let minGrade = finalGrades[0].grade;
+
+                    for (let i = 1; i < finalGrades.length; i++) {
+                        if (finalGrades[i].grade < minGrade) {
+                            minGrade = finalGrades[i].grade;
+                            minGradeIndex = i;
+                        }
+                    }
+                    finalGrades[minGradeIndex].grade = repeteGrade;
+
+                } else if (repeteMode === 'highest_weight') {
+                    // Replace grade with highest weight
+                    let maxWeightIndex = 0;
+                    let maxWeight = finalGrades[0].weight;
+
+                    for (let i = 1; i < finalGrades.length; i++) {
+                        if (finalGrades[i].weight > maxWeight) {
+                            maxWeight = finalGrades[i].weight;
+                            maxWeightIndex = i;
+                        }
+                    }
+                    finalGrades[maxWeightIndex].grade = repeteGrade;
+                }
+
+                // Recalculate Final Average
+                let finalWeightedScore = 0;
+                let finalTotalWeight = 0;
+
+                finalGrades.forEach(g => {
+                    finalWeightedScore += g.grade * (g.weight / 100);
+                    finalTotalWeight += g.weight;
+                });
+
+                let finalAverage = finalWeightedScore / (finalTotalWeight / 100);
+                finalAvgDisplay.innerText = finalAverage.toFixed(1);
+            } else {
+                finalAvgDisplay.innerText = '--';
+            }
+        } else {
+            repeteSection.style.display = 'none';
+            finalAvgDisplay.innerText = currentAverage.toFixed(1); // Same as average if no repete needed
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,372 @@
+{% extends 'calculadora/base.html' %}
+
+{% block content %}
+<div class="container" style="display: flex; justify-content: center; padding-top: 20px;">
+    <div class="calculator-card">
+        <h2 class="text-center" style="color: var(--primary-color); margin-bottom: 30px;">Editar Ramo</h2>
+
+        <form method="post" id="edit-course-form">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label>Nombre del Ramo</label>
+                <input type="text" name="nombre" class="grade-input" value="{{ ramo.nombre }}" required>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Año en el que vas</label>
+                    <select name="anio_academico" class="grade-input" required>
+                        {% for value, label in anio_choices %}
+                        <option value="{{ value }}" {% if ramo.anio_academico == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Semestre</label>
+                    <input type="number" name="semestre" class="grade-input" value="{{ ramo.semestre }}" min="1" max="2"
+                        required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Asistencia (%)</label>
+                <input type="number" name="asistencia" class="grade-input" value="{{ ramo.asistencia }}" min="0"
+                    max="100" required>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--divider-color); margin: 20px 0;">
+
+            <h3 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 15px;">Evaluaciones Existentes
+            </h3>
+            <div style="margin-bottom: 20px;">
+                {% for eval in ramo.evaluaciones.all %}
+                <div class="grade-row" style="opacity: 0.7;" id="eval-{{ eval.id }}">
+                    <div class="input-group" style="flex: 2;">
+                        <input type="text" class="grade-input" value="{{ eval.nombre }}" readonly
+                            style="background: #f0f0f0;">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <input type="text" class="weight-input" value="{{ eval.ponderacion|floatformat:0 }}%" readonly
+                            style="background: #f0f0f0;">
+                    </div>
+                    <button type="button" class="btn-remove" onclick="deleteEvaluacionFromEdit({{ eval.id }})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h3 style="color: var(--primary-light); font-size: 1.1rem; margin-bottom: 15px;">Agregar Nuevas Evaluaciones
+            </h3>
+
+            <div id="evaluations-container">
+                <!-- Evaluaciones dinámicas aquí -->
+            </div>
+
+            <div class="actions-row" style="justify-content: center; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn-secondary" onclick="addSolemne()"
+                    style="font-size: 0.9rem; width: auto; padding: 10px 15px;">
+                    <i class="fas fa-plus"></i> Solemne
+                </button>
+                <button type="button" class="btn-secondary" onclick="showTalleresModal()"
+                    style="font-size: 0.9rem; width: auto; padding: 10px 15px;">
+                    <i class="fas fa-layer-group"></i> Talleres
+                </button>
+                <button type="button" class="btn-secondary" onclick="showParcialesModal()"
+                    style="font-size: 0.9rem; width: auto; padding: 10px 15px;">
+                    <i class="fas fa-layer-group"></i> Parciales
+                </button>
+            </div>
+
+            <button type="submit" class="btn-primary"
+                style="width: 100%; border-radius: var(--radius-sm); font-size: 1rem; margin-top: 30px;">Guardar
+                Cambios</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Talleres -->
+<div id="talleres-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="calculator-card" style="width: 90%; max-width: 350px;">
+        <h3 class="text-center" style="margin-bottom: 20px;">Agregar Talleres</h3>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+            <label>Cantidad de Talleres</label>
+            <input type="number" id="talleres-count" class="grade-input" value="3" min="1" max="10">
+        </div>
+
+        <div class="input-group" style="margin-bottom: 20px;">
+            <label>Porcentaje Total (%)</label>
+            <input type="number" id="talleres-total-weight" class="grade-input" value="20" min="1" max="100">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-secondary" onclick="closeTalleresModal()"
+                style="flex: 1;">Cancelar</button>
+            <button type="button" class="btn-primary" onclick="addTalleres()" style="flex: 1;">Agregar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Parciales -->
+<div id="parciales-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="calculator-card" style="width: 90%; max-width: 350px;">
+        <h3 class="text-center" style="margin-bottom: 20px;">Agregar Parciales</h3>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+            <label>Cantidad de Evaluaciones</label>
+            <input type="number" id="parciales-count" class="grade-input" value="3" min="1" max="10">
+        </div>
+
+        <div class="input-group" style="margin-bottom: 20px;">
+            <label>Porcentaje Total (%)</label>
+            <input type="number" id="parciales-total-weight" class="grade-input" value="20" min="1" max="100">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-secondary" onclick="closeParcialesModal()"
+                style="flex: 1;">Cancelar</button>
+            <button type="button" class="btn-primary" onclick="addParciales()" style="flex: 1;">Agregar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let solemneCount = 0;
+
+    function addSolemne() {
+        solemneCount++;
+        const container = document.getElementById('evaluations-container');
+        const div = document.createElement('div');
+        div.className = 'grade-row';
+        div.innerHTML = `
+            <div class="input-group" style="flex: 2;">
+                <input type="text" name="eval_names[]" class="grade-input" value="Nueva Solemne ${solemneCount}" required>
+                <input type="hidden" name="eval_types[]" value="SOLEMNE">
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <input type="number" name="eval_weights[]" class="weight-input" placeholder="%" min="0" max="100" step="0.1" required onchange="updatePesoDisponible()">
+            </div>
+            <button type="button" class="btn-remove" onclick="this.closest('.grade-row').remove(); updatePesoDisponible();"><i class="fas fa-minus"></i></button>
+        `;
+        container.appendChild(div);
+        updatePesoDisponible();
+    }
+
+    function showParcialesModal() {
+        document.getElementById('parciales-modal').style.display = 'flex';
+    }
+
+    function closeParcialesModal() {
+        document.getElementById('parciales-modal').style.display = 'none';
+    }
+
+    function showTalleresModal() {
+        document.getElementById('talleres-modal').style.display = 'flex';
+    }
+
+    function closeTalleresModal() {
+        document.getElementById('talleres-modal').style.display = 'none';
+    }
+
+    function addTalleres() {
+        const count = parseInt(document.getElementById('talleres-count').value);
+        const totalWeight = parseFloat(document.getElementById('talleres-total-weight').value);
+
+        if (count > 0 && totalWeight > 0 && totalWeight <= 100) {
+            const container = document.getElementById('evaluations-container');
+
+            // Calcular ponderaciones distribuyendo el residuo
+            const baseWeight = Math.floor((totalWeight / count) * 100) / 100;
+            const remainder = Math.round((totalWeight - (baseWeight * count)) * 100) / 100;
+
+            for (let i = 1; i <= count; i++) {
+                const div = document.createElement('div');
+                div.className = 'grade-row';
+
+                // Distribuir el residuo
+                let weight;
+                if (i <= count - Math.round(remainder / 0.01)) {
+                    weight = baseWeight.toFixed(2);
+                } else {
+                    weight = (baseWeight + 0.01).toFixed(2);
+                }
+
+                div.innerHTML = `
+                    <div class="input-group" style="flex: 2;">
+                        <input type="text" name="eval_names[]" class="grade-input" value="Nuevo Taller ${i}" required>
+                        <input type="hidden" name="eval_types[]" value="TALLER">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <input type="number" name="eval_weights[]" class="weight-input" value="${weight}" min="0" max="100" step="0.01" readonly style="background: #f0f0f0;">
+                    </div>
+                    <button type="button" class="btn-remove" onclick="this.closest('.grade-row').remove()"><i class="fas fa-minus"></i></button>
+                `;
+                container.appendChild(div);
+            }
+            closeTalleresModal();
+            updatePesoDisponible();
+        } else {
+            alert('Por favor ingresa valores válidos (porcentaje total debe ser entre 1 y 100)');
+        }
+    }
+
+    function addParciales() {
+        const count = parseInt(document.getElementById('parciales-count').value);
+        const totalWeight = parseFloat(document.getElementById('parciales-total-weight').value);
+
+        if (count > 0 && totalWeight > 0 && totalWeight <= 100) {
+            const container = document.getElementById('evaluations-container');
+
+            // Calcular ponderaciones distribuyendo el residuo
+            const baseWeight = Math.floor((totalWeight / count) * 100) / 100; // 2 decimales
+            const remainder = Math.round((totalWeight - (baseWeight * count)) * 100) / 100;
+
+            for (let i = 1; i <= count; i++) {
+                const div = document.createElement('div');
+                div.className = 'grade-row';
+
+                // Distribuir el residuo: últimas evaluaciones reciben el ajuste
+                let weight;
+                if (i <= count - Math.round(remainder / 0.01)) {
+                    weight = baseWeight.toFixed(2);
+                } else {
+                    weight = (baseWeight + 0.01).toFixed(2);
+                }
+
+                div.innerHTML = `
+                    <div class="input-group" style="flex: 2;">
+                        <input type="text" name="eval_names[]" class="grade-input" value="Nuevo Parcial ${i}" required>
+                        <input type="hidden" name="eval_types[]" value="TALLER">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <input type="number" name="eval_weights[]" class="weight-input" value="${weight}" min="0" max="100" step="0.01" readonly style="background: #f0f0f0;">
+                    </div>
+                    <button type="button" class="btn-remove" onclick="this.closest('.grade-row').remove()"><i class="fas fa-minus"></i></button>
+                `;
+                container.appendChild(div);
+            }
+            closeParcialesModal();
+            updatePesoDisponible();
+        } else {
+            alert('Por favor ingresa valores válidos (porcentaje total debe ser entre 1 y 100)');
+        }
+    }
+
+    // Función para eliminar evaluación existente
+    function deleteEvaluacionFromEdit(evaluacionId) {
+        if (!confirm('¿Estás seguro de eliminar esta evaluación?')) {
+            return;
+        }
+
+        fetch(`/delete_evaluacion/${evaluacionId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Eliminar el elemento del DOM
+                const evalDiv = document.getElementById(`eval-${evaluacionId}`);
+                if (evalDiv) {
+                    evalDiv.remove();
+                }
+                // Actualizar el mensaje de peso disponible
+                updatePesoDisponible();
+            } else {
+                alert('Error al eliminar la evaluación');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar la evaluación');
+        });
+    }
+
+    // Calcular peso disponible
+    function calcularPesoDisponible() {
+        // Peso de evaluaciones existentes (que no han sido eliminadas)
+        const existingEvals = document.querySelectorAll('[id^="eval-"]');
+        let pesoExistente = 0;
+        existingEvals.forEach(div => {
+            const weightText = div.querySelector('.weight-input').value;
+            const weight = parseFloat(weightText.replace('%', ''));
+            if (!isNaN(weight)) {
+                pesoExistente += weight;
+            }
+        });
+
+        // Peso de nuevas evaluaciones
+        const newWeights = document.querySelectorAll('#evaluations-container input[name="eval_weights[]"]');
+        let pesoNuevo = 0;
+        newWeights.forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            pesoNuevo += value;
+        });
+
+        return {
+            pesoExistente: pesoExistente,
+            pesoNuevo: pesoNuevo,
+            pesoTotal: pesoExistente + pesoNuevo,
+            pesoDisponible: 100 - pesoExistente - pesoNuevo
+        };
+    }
+
+    // Actualizar mensaje de peso disponible
+    function updatePesoDisponible() {
+        const pesos = calcularPesoDisponible();
+        let msgDiv = document.getElementById('peso-disponible-msg');
+
+        if (!msgDiv) {
+            msgDiv = document.createElement('div');
+            msgDiv.id = 'peso-disponible-msg';
+            msgDiv.style.cssText = 'padding: 10px; margin-bottom: 15px; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600;';
+            const container = document.getElementById('evaluations-container');
+            container.parentNode.insertBefore(msgDiv, container);
+        }
+
+        if (pesos.pesoTotal > 100) {
+            msgDiv.style.backgroundColor = '#f8d7da';
+            msgDiv.style.color = '#721c24';
+            msgDiv.innerHTML = `⚠El peso total es ${pesos.pesoTotal.toFixed(1)}% (excede el 100%)`;
+        } else if (pesos.pesoTotal === 100) {
+            msgDiv.style.backgroundColor = '#d4edda';
+            msgDiv.style.color = '#155724';
+            msgDiv.innerHTML = `Peso total: 100% (completo)`;
+        } else {
+            msgDiv.style.backgroundColor = '#d1ecf1';
+            msgDiv.style.color = '#0c5460';
+            msgDiv.innerHTML = `Peso disponible: ${pesos.pesoDisponible.toFixed(1)}% de 100%`;
+        }
+    }
+
+    // Actualizar peso disponible cuando se agreguen evaluaciones
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePesoDisponible();
+    });
+
+    // Validar antes de enviar el formulario
+    document.getElementById('edit-course-form').addEventListener('submit', function (e) {
+        const pesos = calcularPesoDisponible();
+
+        if (pesos.pesoTotal > 100) {
+            e.preventDefault();
+            alert(`La suma total de porcentajes es ${pesos.pesoTotal.toFixed(1)}% y excede el 100%.\n\nPeso existente: ${pesos.pesoExistente.toFixed(1)}%\nPeso nuevo: ${pesos.pesoNuevo.toFixed(1)}%\n\nPor favor elimina evaluaciones o reduce los porcentajes.`);
+            return false;
+        }
+
+        if (pesos.pesoTotal < 100) {
+            if (!confirm(`La suma total es ${pesos.pesoTotal.toFixed(1)}% (menor a 100%).\n¿Deseas continuar de todos modos?`)) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+</script>
+{% endblock %}
