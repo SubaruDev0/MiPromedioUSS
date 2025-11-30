@@ -6,6 +6,10 @@ from django.views.decorators.http import require_POST
 from .models import Ramo, Carrera, Evaluacion, PerfilUsuario
 from .forms import RegistroUsuarioForm
 import json
+from django.core.cache import cache
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
+from django.contrib.auth.models import User
 
 def home(request):
     """
@@ -180,6 +184,29 @@ def ramo_detail(request, ramo_id):
     """
     ramo = get_object_or_404(Ramo, id=ramo_id, usuario=request.user)
     return render(request, 'calculadora/ramo_detail.html', {'ramo': ramo})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_panel(request):
+    """Panel muy sencillo para administradores: listar usuarios y limpiar cache."""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'clear_cache':
+            try:
+                cache.clear()
+                messages.success(request, 'Cache limpiada correctamente.')
+            except Exception as e:
+                messages.error(request, f'Error limpiando cache: {e}')
+        return redirect('admin_panel')
+
+    users = User.objects.all().order_by('-date_joined')
+    # Pass minimal fields to template
+    users_data = users.values('id', 'username', 'email', 'is_staff', 'is_superuser', 'date_joined', 'last_login')
+    return render(request, 'calculadora/admin_panel.html', {
+        'users': users_data,
+        'users_count': users.count()
+    })
 
 @login_required
 def add_course(request):

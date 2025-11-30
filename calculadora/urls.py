@@ -16,4 +16,5 @@ urlpatterns = [
     path('save_grade/<int:evaluacion_id>/', views.save_grade, name='save_grade'),
     path('delete_evaluacion/<int:evaluacion_id>/', views.delete_evaluacion, name='delete_evaluacion'),
     path('save_nota_objetivo/<int:ramo_id>/', views.save_nota_objetivo, name='save_nota_objetivo'),
+    path('admin-panel/', views.admin_panel, name='admin_panel'),
 ]

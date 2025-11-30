@@ -35,6 +35,9 @@
         <div class="header-icons" style="flex: 1; justify-content: flex-end;">
             <i class="far fa-bell"></i>
             <i class="fas fa-bars"></i>
+            {% if user.is_superuser %}
+            <a href="{% url 'admin_panel' %}" title="Panel Admin" style="color: var(--primary-color); margin-left: 10px; text-decoration: none;"><i class="fas fa-shield-alt"></i></a>
+            {% endif %}
         </div>
         {% else %}
         <div class="header-title">Calculadora de Notas</div>
@@ -47,6 +50,15 @@
 
     <!-- Contenido Principal -->
     <div class="content">
+        {% if messages %}
+        <div style="max-width:800px; margin: 12px auto;">
+            {% for message in messages %}
+            <div style="padding:8px 12px; border-radius:6px; margin-bottom:8px; background: {% if message.tags == 'success' %}var(--success-light){% elif message.tags == 'error' %}var(--danger-light){% else %} #eef2ff {% endif %}; color: {% if message.tags == 'success' %}var(--success-color){% elif message.tags == 'error' %}var(--danger-color){% else %}var(--text-main){% endif %};">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}
         {% endblock %}
     </div>

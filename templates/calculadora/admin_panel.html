@@ -1,0 +1,51 @@
+{% extends 'calculadora/base.html' %}
+
+{% block content %}
+<div class="container" style="padding-top: 20px;">
+    <div class="calculator-card">
+        <h2 style="color: var(--primary-color); margin-bottom: 10px;">Panel de Administración</h2>
+
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.95rem; color: var(--text-secondary);">Usuarios registrados: <strong>{{ users_count }}</strong></div>
+            <form method="post" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="clear_cache">
+                <button type="submit" class="btn-secondary">Limpiar Caché</button>
+            </form>
+        </div>
+
+        <hr style="margin: 12px 0; border-top: 1px solid var(--divider-color);">
+
+        <div style="overflow:auto; max-height: 60vh;">
+            <table style="width:100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align:left; border-bottom:1px solid var(--border-color);">
+                        <th style="padding:8px">ID</th>
+                        <th style="padding:8px">Usuario</th>
+                        <th style="padding:8px">Email</th>
+                        <th style="padding:8px">Superuser</th>
+                        <th style="padding:8px">Staff</th>
+                        <th style="padding:8px">Creado</th>
+                        <th style="padding:8px">Último login</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr style="border-bottom:1px solid var(--divider-color);">
+                        <td style="padding:8px">{{ u.id }}</td>
+                        <td style="padding:8px">{{ u.username }}</td>
+                        <td style="padding:8px">{{ u.email }}</td>
+                        <td style="padding:8px">{{ u.is_superuser }}</td>
+                        <td style="padding:8px">{{ u.is_staff }}</td>
+                        <td style="padding:8px">{{ u.date_joined }}</td>
+                        <td style="padding:8px">{{ u.last_login }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="padding:8px">No hay usuarios registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
