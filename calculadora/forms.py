@@ -1,14 +1,23 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 
 class RegistroUsuarioForm(UserCreationForm):
     """Formulario de registro personalizado en español"""
+    # Validador personalizado que permite espacios
+    username_validator = RegexValidator(
+        regex=r'^[\w\s.@+-]+$',
+        message='Introduce un nombre válido. Puede contener letras, números, espacios y los caracteres @/./+/-/_',
+        code='invalid_username'
+    )
+    
     username = forms.CharField(
         label='Nombre completo o usuario',
         max_length=150,
         help_text='Puedes usar tu nombre completo o un nombre de usuario. Ejemplo: Javier Morales o javi.morales',
-        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Javier Morales'})
+        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Javier Morales'}),
+        validators=[username_validator]
     )
     password1 = forms.CharField(
         label='Contraseña',
@@ -42,4 +51,7 @@ class RegistroUsuarioForm(UserCreationForm):
         self.error_messages = {
             'password_mismatch': 'Las dos contraseñas no coinciden.',
         }
+        # Remover el validador por defecto de Django que no permite espacios
+        if 'username' in self.fields:
+            self.fields['username'].validators = [self.username_validator]
 
