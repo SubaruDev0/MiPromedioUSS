@@ -698,6 +698,34 @@ input::placeholder {
     background-clip: text;
 }
 
+/* Botón Nuevo Ramo compacto */
+.btn-add-ramo {
+    margin-left: auto;
+    text-decoration: none;
+    background: var(--primary-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.btn-add-ramo:hover {
+    background: var(--primary-light);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-add-ramo i {
+    font-size: 0.75rem;
+}
+
 /* ========================================
    RESPONSIVE DESIGN - MOBILE OPTIMIZATIONS
    ======================================== */
@@ -808,6 +836,42 @@ input::placeholder {
     .actions-row button {
         width: 100%;
     }
+
+    /* Botón Nuevo Ramo aún más compacto en tablets */
+    .btn-add-ramo {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    .btn-add-ramo-text {
+        display: inline;
+    }
+
+    /* Mejorar espaciado de header en móvil */
+    .header-center {
+        padding: 0 8px;
+    }
+
+    .header-center div {
+        padding: 4px 12px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Mejorar tablas de notas en móvil */
+    .grades-table {
+        font-size: 0.85rem;
+    }
+
+    .grades-table th,
+    .grades-table td {
+        padding: 8px 4px;
+    }
+
+    .grade-pill {
+        padding: 6px 8px;
+        font-size: 0.85rem;
+        min-width: 50px;
+    }
 }
 
 /* Mobile phones */
@@ -866,5 +930,97 @@ input::placeholder {
 
     .input-group label {
         font-size: 0.85rem;
+    }
+
+    /* Botón Nuevo Ramo solo ícono en móviles pequeños */
+    .btn-add-ramo {
+        padding: 6px;
+        width: 32px;
+        height: 32px;
+        justify-content: center;
+    }
+
+    .btn-add-ramo-text {
+        display: none;
+    }
+
+    .btn-add-ramo i {
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Header más compacto */
+    .header-left span {
+        font-size: 0.8rem !important;
+    }
+
+    .header-center div {
+        padding: 3px 10px !important;
+        font-size: 0.7rem !important;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header-icons i {
+        font-size: 0.9rem;
+        padding: 6px;
+    }
+
+    /* Course cards más compactas */
+    .course-header {
+        padding: 12px;
+    }
+
+    .course-title {
+        font-size: 0.95rem;
+    }
+
+    .course-content {
+        padding: 12px;
+    }
+
+    /* Tablas más compactas */
+    .grades-table {
+        font-size: 0.8rem;
+    }
+
+    .grades-table th,
+    .grades-table td {
+        padding: 6px 2px;
+    }
+
+    .grade-pill {
+        padding: 5px 6px;
+        font-size: 0.8rem;
+        min-width: 45px;
+    }
+
+    /* Summary section más compacto */
+    .summary-section {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .summary-row {
+        margin-bottom: 6px;
+    }
+
+    /* Botones de acción más pequeños */
+    .btn-icon {
+        font-size: 0.85rem;
+        padding: 4px;
+    }
+
+    /* Tabs más compactos */
+    .tabs {
+        padding: 0 8px;
+    }
+
+    .tab {
+        padding: 10px 0;
+        font-size: 0.8rem;
+        margin-right: 12px;
     }
 }

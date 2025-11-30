@@ -13,10 +13,10 @@ class RegistroUsuarioForm(UserCreationForm):
     )
     
     username = forms.CharField(
-        label='Nombre completo o usuario',
+        label='Nombre de usuario',
         max_length=150,
-        help_text='Puedes usar tu nombre completo o un nombre de usuario. Ejemplo: Javier Morales o javi.morales',
-        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Javier Morales'}),
+        help_text='No uses espacios. Usa guiones bajos (_) para separar palabras. Ejemplo: Javier_Morales',
+        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Javier_Morales'}),
         validators=[username_validator]
     )
     password1 = forms.CharField(
