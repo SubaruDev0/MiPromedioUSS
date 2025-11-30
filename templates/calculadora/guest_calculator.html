@@ -346,18 +346,33 @@
             let grade = parseFloat(gradeInput.value);
             let weight = parseFloat(weightInput.value);
 
-            // Enforce limits immediately on input
+            // VALIDACIONES MEJORADAS
+            // Validar notas (10-70)
             if (gradeInput.value !== '') {
-                if (grade > 70) { grade = 70; gradeInput.value = 70; }
-                if (grade < 10 && gradeInput.value.length >= 2) { grade = 10; gradeInput.value = 10; } // Only clamp min if 2 digits typed to allow typing '1' then '0'
+                if (grade > 70) { 
+                    grade = 70; 
+                    gradeInput.value = 70; 
+                }
+                // Solo aplicar mínimo si el usuario ha terminado de escribir
+                if (grade < 10 && gradeInput.value.length >= 2) { 
+                    grade = 10; 
+                    gradeInput.value = 10; 
+                }
             }
 
+            // Validar porcentajes (0-100)
             if (weightInput.value !== '') {
-                if (weight > 100) { weight = 100; weightInput.value = 100; }
-                if (weight < 0) { weight = 0; weightInput.value = 0; }
+                if (weight > 100) { 
+                    weight = 100; 
+                    weightInput.value = 100; 
+                }
+                if (weight < 0) { 
+                    weight = 0; 
+                    weightInput.value = 0; 
+                }
             }
 
-            if (!isNaN(grade) && !isNaN(weight)) {
+            if (!isNaN(grade) && !isNaN(weight) && grade >= 10 && weight > 0) {
                 grades.push({ grade, weight });
                 totalWeightedScore += grade * (weight / 100);
                 totalWeight += weight;
@@ -388,9 +403,16 @@
             const repeteGradeInput = document.getElementById('repete-grade');
             let repeteGrade = parseFloat(repeteGradeInput.value);
 
+            // VALIDAR NOTA DE REPETE (10-70)
             if (repeteGradeInput.value !== '') {
-                if (repeteGrade > 70) { repeteGrade = 70; repeteGradeInput.value = 70; }
-                if (repeteGrade < 10 && repeteGradeInput.value.length >= 2) { repeteGrade = 10; repeteGradeInput.value = 10; }
+                if (repeteGrade > 70) { 
+                    repeteGrade = 70; 
+                    repeteGradeInput.value = 70; 
+                }
+                if (repeteGrade < 10 && repeteGradeInput.value.length >= 2) { 
+                    repeteGrade = 10; 
+                    repeteGradeInput.value = 10; 
+                }
             }
 
             const repeteMode = document.getElementById('repete-mode').value;

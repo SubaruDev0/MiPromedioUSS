@@ -5,10 +5,10 @@ from django.contrib.auth.models import User
 class RegistroUsuarioForm(UserCreationForm):
     """Formulario de registro personalizado en español"""
     username = forms.CharField(
-        label='Nombre de usuario',
+        label='Nombre completo o usuario',
         max_length=150,
-        help_text='Requerido. 150 caracteres o menos. Letras, dígitos y @/./+/-/_ solamente.',
-        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: juan.perez'})
+        help_text='Puedes usar tu nombre completo o un nombre de usuario. Ejemplo: Javier Morales o javi.morales',
+        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Javier Morales'})
     )
     password1 = forms.CharField(
         label='Contraseña',

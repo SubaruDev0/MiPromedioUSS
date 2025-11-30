@@ -184,46 +184,50 @@ def ramo_detail(request, ramo_id):
 @login_required
 def add_course(request):
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        # codigo is optional now
-        codigo = request.POST.get('codigo', '')
-        anio_academico = request.POST.get('anio_academico')
-        semestre = request.POST.get('semestre')
-        asistencia = request.POST.get('asistencia', 0)
-        
-        # Crear Ramo
-        carrera = None
-        if hasattr(request.user, 'perfilusuario') and request.user.perfilusuario.carrera:
-            carrera = request.user.perfilusuario.carrera
-        else:
-            carrera, _ = Carrera.objects.get_or_create(nombre="General", codigo="GEN")
+        try:
+            nombre = request.POST.get('nombre')
+            # codigo is optional now
+            codigo = request.POST.get('codigo', '')
+            anio_academico = request.POST.get('anio_academico')
+            semestre = request.POST.get('semestre')
+            asistencia = request.POST.get('asistencia', 0)
+            
+            # Crear Ramo
+            carrera = None
+            if hasattr(request.user, 'perfilusuario') and request.user.perfilusuario.carrera:
+                carrera = request.user.perfilusuario.carrera
+            else:
+                carrera, _ = Carrera.objects.get_or_create(nombre="General", codigo="GEN")
 
-        ramo = Ramo.objects.create(
-            nombre=nombre,
-            codigo=codigo,
-            anio_academico=anio_academico,
-            semestre=semestre,
-            asistencia=asistencia,
-            usuario=request.user,
-            carrera=carrera,
-            is_historical=False
-        )
+            ramo = Ramo.objects.create(
+                nombre=nombre,
+                codigo=codigo,
+                anio_academico=anio_academico,
+                semestre=semestre,
+                asistencia=asistencia,
+                usuario=request.user,
+                carrera=carrera,
+                is_historical=False
+            )
 
-        # Crear Evaluaciones
-        eval_names = request.POST.getlist('eval_names[]')
-        eval_weights = request.POST.getlist('eval_weights[]')
-        eval_types = request.POST.getlist('eval_types[]')
+            # Crear Evaluaciones
+            eval_names = request.POST.getlist('eval_names[]')
+            eval_weights = request.POST.getlist('eval_weights[]')
+            eval_types = request.POST.getlist('eval_types[]')
 
-        for i in range(len(eval_names)):
-            if eval_names[i] and eval_weights[i]:
-                Evaluacion.objects.create(
-                    nombre=eval_names[i],
-                    tipo=eval_types[i],
-                    ponderacion=float(eval_weights[i]),
-                    ramo=ramo
-                )
-        
-        return redirect('dashboard')
+            for i in range(len(eval_names)):
+                if eval_names[i] and eval_weights[i]:
+                    Evaluacion.objects.create(
+                        nombre=eval_names[i],
+                        tipo=eval_types[i],
+                        ponderacion=float(eval_weights[i]),
+                        ramo=ramo
+                    )
+            
+            return redirect('dashboard')
+        except Exception as e:
+            print(f"Error al crear ramo: {e}")
+            return redirect('dashboard')
 
     # Pasar las opciones de año académico al template
     anio_choices = Ramo.ANIO_CHOICES
@@ -242,27 +246,41 @@ def edit_course(request, ramo_id):
     ramo = get_object_or_404(Ramo, id=ramo_id, usuario=request.user)
     
     if request.method == 'POST':
-        ramo.nombre = request.POST.get('nombre')
-        ramo.anio_academico = request.POST.get('anio_academico')
-        ramo.semestre = request.POST.get('semestre')
-        ramo.asistencia = request.POST.get('asistencia')
-        ramo.save()
+        try:
+            ramo.nombre = request.POST.get('nombre')
+            ramo.anio_academico = request.POST.get('anio_academico')
+            ramo.semestre = request.POST.get('semestre')
+            ramo.asistencia = request.POST.get('asistencia')
+            ramo.save()
 
-        # Agregar nuevas evaluaciones
-        eval_names = request.POST.getlist('eval_names[]')
-        eval_weights = request.POST.getlist('eval_weights[]')
-        eval_types = request.POST.getlist('eval_types[]')
+            # Actualizar ponderaciones de evaluaciones existentes
+            eval_ids = request.POST.getlist('eval_ids[]')
+            eval_existing_weights = request.POST.getlist('eval_existing_weights[]')
+            
+            for i in range(len(eval_ids)):
+                if eval_ids[i] and eval_existing_weights[i]:
+                    evaluacion = Evaluacion.objects.get(id=eval_ids[i], ramo=ramo)
+                    evaluacion.ponderacion = float(eval_existing_weights[i])
+                    evaluacion.save()
 
-        for i in range(len(eval_names)):
-            if eval_names[i] and eval_weights[i]:
-                Evaluacion.objects.create(
-                    nombre=eval_names[i],
-                    tipo=eval_types[i],
-                    ponderacion=float(eval_weights[i]),
-                    ramo=ramo
-                )
-        
-        return redirect('dashboard')
+            # Agregar nuevas evaluaciones
+            eval_names = request.POST.getlist('eval_names[]')
+            eval_weights = request.POST.getlist('eval_weights[]')
+            eval_types = request.POST.getlist('eval_types[]')
+
+            for i in range(len(eval_names)):
+                if eval_names[i] and eval_weights[i]:
+                    Evaluacion.objects.create(
+                        nombre=eval_names[i],
+                        tipo=eval_types[i],
+                        ponderacion=float(eval_weights[i]),
+                        ramo=ramo
+                    )
+            
+            return redirect('dashboard')
+        except Exception as e:
+            print(f"Error al editar ramo: {e}")
+            return redirect('dashboard')
 
     # Calcular peso total de evaluaciones existentes
     total_peso_existente = sum(eval.ponderacion for eval in ramo.evaluaciones.all())
