@@ -233,7 +233,7 @@
         }
     }
 
-    // Validar antes de enviar el formulario
+    // Validar antes de enviar el formulario: exigir que la suma de porcentajes sea ~100
     document.getElementById('add-course-form').addEventListener('submit', function (e) {
         const weights = document.querySelectorAll('input[name="eval_weights[]"]');
         let totalWeight = 0;
@@ -243,19 +243,12 @@
             totalWeight += value;
         });
 
-        // Solo prevenir si excede 100% (no si es exactamente 100%)
-        if (totalWeight > 100) {
+        // Requerir que la suma sea aproximadamente 100 (tolerancia 0.2%)
+        const tol = 0.2; // porcentajes
+        if (Math.abs(totalWeight - 100) > tol) {
             e.preventDefault();
-            alert('La suma de los porcentajes no puede exceder 100%. Actualmente suma: ' + totalWeight.toFixed(1) + '%');
+            alert('La suma de los porcentajes debe ser 100%. Actualmente suma: ' + totalWeight.toFixed(2) + '%');
             return false;
-        }
-
-        // Advertencia si no suma 100% pero permitir continuar
-        if (totalWeight < 100 && totalWeight > 0) {
-            if (!confirm('La suma de porcentajes es ' + totalWeight.toFixed(1) + '% (menor a 100%). ¿Deseas continuar de todos modos?')) {
-                e.preventDefault();
-                return false;
-            }
         }
     });
 </script>
