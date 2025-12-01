@@ -151,3 +151,9 @@ Si quieres que lo cree en el repo ahora, lo agrego (o ajusto el contenido a tu p
 
 Por favor revisa las secciones anteriores para instrucciones de despliegue y pruebas.
 
+## Mejoras UI/UX
+
+- Se centralizaron estilos en `static/css/uss-styles.css` y se mejoró la responsividad general.
+- Calculadora rápida y panel de administración tienen layouts optimizados para móvil y escritorio.
+- Mejor contraste y comportamiento en hover para botones primarios.
+

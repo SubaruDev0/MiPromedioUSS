@@ -558,6 +558,113 @@ input::placeholder {
     gap: var(--spacing-sm);
 }
 
+/* --- Centralized styles for calculator quick and admin panel improvements --- */
+
+/* Calculator card tweaks (used across templates) */
+.calculator-card {
+    background: var(--card-bg);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.grade-row {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.input-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Compact inputs */
+.grade-input,
+.weight-input,
+select {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-remove {
+    background: #FFEBEE;
+    color: var(--danger-color);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s ease;
+}
+
+.btn-remove:hover { background: #FFCDD2; }
+
+/* Mobile adjustments for quick calculator */
+@media (max-width: 480px) {
+    .calculator-card { padding: calc(var(--spacing-sm) + 6px); margin: 0 12px; }
+    .grade-row { flex-direction: row; gap: 8px; align-items: flex-start; }
+    .grade-row .input-group label { display: block; font-size: 0.72rem; margin-bottom: 4px; }
+    .grade-row .input-group:first-child { flex: 0 0 60%; }
+    .grade-row .input-group:nth-child(2) { flex: 0 0 30%; }
+    .btn-remove { width: 36px; height: 36px; margin-left: 6px; align-self: center; }
+    .results-container { flex-direction: column; gap: 10px; }
+    .result-value { font-size: 1.25rem; }
+}
+
+/* Admin panel responsive centralized styles */
+.container.admin-centered { display: flex; justify-content: center; }
+
+@media (min-width: 992px) {
+    .calculator-card.admin-wide { max-width: 1200px; width: 85%; min-width: 820px; padding: calc(var(--spacing-lg) + 6px); }
+}
+
+.calculator-card .table-wrapper { width: 100%; overflow: auto; }
+.calculator-card table { width: 100%; border-collapse: collapse; table-layout: auto; }
+.calculator-card th, .calculator-card td { padding: 8px 10px; font-size: 0.95rem; vertical-align: middle; }
+
+@media (max-width: 768px) {
+    .calculator-card { padding: calc(var(--spacing-md)); }
+    .calculator-card thead { display: none; }
+    .calculator-card table, .calculator-card tbody, .calculator-card tr { display: block; width: 100%; }
+    .calculator-card tr { margin-bottom: 12px; border-bottom: 1px solid var(--divider-color); padding-bottom: 8px; }
+    .calculator-card td { display: flex; justify-content: space-between; padding: 6px 0; border: 0; }
+    .calculator-card td:before { content: attr(data-label) ":"; font-weight: 700; color: var(--text-secondary); margin-right: 8px; flex: 0 0 auto; }
+    .calculator-card td[data-label="Acciones"] { display: flex; gap: 8px; justify-content: flex-end; }
+}
+
+/* Hover fix for clickable primary actions */
+.btn-primary, .btn-primary span, .btn-primary i { color: #ffffff !important; }
+
+/* General UX tweaks */
+.calculator-card .header { padding: var(--spacing-md); }
+.calculator-card .summary-section { margin-top: var(--spacing-md); }
+
+/* Slightly larger inputs on desktop for better tap targets */
+@media (min-width: 992px) {
+    .grade-input, .weight-input { padding: 12px; font-size: 1rem; }
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
     color: white;
