@@ -34,10 +34,46 @@ class RegistroUsuarioForm(UserCreationForm):
         required=False,
         widget=forms.EmailInput(attrs={'class': 'grade-input', 'placeholder': 'ejemplo@uss.cl'})
     )
-    carrera = forms.CharField(
+    CARRERAS_CHOICES = [
+        ('MED', 'Medicina'),
+        ('ODON', 'Odontología'),
+        ('ENF', 'Enfermería'),
+        ('NUT', 'Nutrición y Dietética'),
+        ('OBG', 'Obstetricia'),
+        ('TM', 'Tecnología Médica'),
+        ('KIN', 'Kinesiología'),
+        ('FON', 'Fonoaudiología'),
+        ('TO', 'Terapia Ocupacional'),
+        ('QF', 'Química y Farmacia'),
+        ('BIO', 'Bioquímica'),
+        ('IC', 'Ingeniería Civil'),
+        ('ICI', 'Ingeniería Civil Industrial'),
+        ('ICI_INF', 'Ingeniería Civil en Informática'),
+        ('MIN', 'Ingeniería Civil en Minas'),
+        ('GEO', 'Geología'),
+        ('RRNN', 'Ing. Recursos Naturales'),
+        ('ECO', 'Ingeniería en Expediciones y Ecoturismo'),
+        ('PED_BAS', 'Pedagogía en Educación Básica'),
+        ('PED_PARV', 'Pedagogía en Educación Parvularia'),
+        ('PED_DIFF', 'Pedagogía en Educación Diferencial'),
+        ('PED_ING', 'Pedagogía en Inglés'),
+        ('EDU_FIS', 'Educación Física'),
+        ('DER', 'Derecho'),
+        ('PSI', 'Psicología'),
+        ('TS', 'Trabajo Social'),
+        ('HIS', 'Historia'),
+        ('COM', 'Ingeniería Comercial'),
+        ('CONT', 'Contabilidad y Auditoría'),
+        ('ECO_N', 'Economía'),
+        ('MKT', 'Marketing y Gestión Comercial'),
+        ('ARQ', 'Arquitectura'),
+        ('ANIM', 'Animación Digital'),
+    ]
+
+    carrera = forms.ChoiceField(
         label='Carrera',
-        max_length=100,
-        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Ingeniería Civil Informática'}),
+        choices=CARRERAS_CHOICES,
+        widget=forms.Select(attrs={'class': 'grade-input'}),
         required=True
     )
 

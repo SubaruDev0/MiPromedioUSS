@@ -582,6 +582,7 @@ input::placeholder {
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+    color: white; /* Ensure text remains visible on hover */
 }
 
 .btn-primary:active {
