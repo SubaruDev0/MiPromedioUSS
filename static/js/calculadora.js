@@ -494,7 +494,19 @@ function setupNotaObjetivoClamps() {
     // Guest calculator
     const guestInput = document.getElementById('nota-objetivo-custom');
     if (guestInput) {
+        // Allow typing intermediate values; only clamp on blur/change
         guestInput.addEventListener('input', function() {
+            // Just recalculate guest preview while typing, don't modify value
+            calculateGuest();
+        });
+        guestInput.addEventListener('blur', function() {
+            let v = parseFloat(this.value);
+            if (isNaN(v)) return;
+            if (v > 70) this.value = 70;
+            if (v < 10) this.value = 10;
+            calculateGuest();
+        });
+        guestInput.addEventListener('change', function() {
             let v = parseFloat(this.value);
             if (isNaN(v)) return;
             if (v > 70) this.value = 70;
@@ -505,13 +517,17 @@ function setupNotaObjetivoClamps() {
 
     // Ramo custom inputs (may be multiple)
     document.querySelectorAll('.nota-objetivo-custom-input').forEach(inp => {
+        // Allow typing; clamp and save on change/blur
         inp.addEventListener('input', function() {
+            // do nothing to value here to allow multi-digit entry
+        });
+        inp.addEventListener('blur', function() {
             let v = parseFloat(this.value);
             if (isNaN(v)) return;
             if (v > 70) this.value = 70;
             if (v < 10) this.value = 10;
+            updateNotaObjetivoCustom(this);
         });
-        // also clamp on blur and save
         inp.addEventListener('change', function() {
             let v = parseFloat(this.value);
             if (isNaN(v)) return;
