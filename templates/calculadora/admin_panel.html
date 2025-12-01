@@ -16,8 +16,8 @@
 
         <hr style="margin: 12px 0; border-top: 1px solid var(--divider-color);">
 
-        <div style="overflow:auto; max-height: 60vh;">
-            <table style="width:100%; border-collapse: collapse;">
+        <div class="table-wrapper" style="max-height: 60vh; overflow:auto;">
+            <table class="responsive-table" style="width:100%; border-collapse: collapse;">
                 <thead>
                     <tr style="text-align:left; border-bottom:1px solid var(--border-color);">
                         <th style="padding:8px">ID</th>
@@ -33,15 +33,15 @@
                 <tbody>
                     {% for u in users %}
                     <tr style="border-bottom:1px solid var(--divider-color);">
-                        <td style="padding:8px">{{ u.id }}</td>
-                        <td style="padding:8px">{{ u.username }}</td>
-                        <td style="padding:8px">{{ u.email }}</td>
-                        <td style="padding:8px">{{ u.is_superuser }}</td>
-                        <td style="padding:8px">{{ u.is_staff }}</td>
-                        <td style="padding:8px">{{ u.date_joined }}</td>
-                        <td style="padding:8px">{{ u.last_login }}</td>
-                        <td style="padding:8px">
-                            <div style="display:flex; gap:6px;">
+                        <td data-label="ID" style="padding:8px">{{ u.id }}</td>
+                        <td data-label="Usuario" style="padding:8px">{{ u.username }}</td>
+                        <td data-label="Email" style="padding:8px">{{ u.email }}</td>
+                        <td data-label="Superuser" style="padding:8px">{{ u.is_superuser }}</td>
+                        <td data-label="Staff" style="padding:8px">{{ u.is_staff }}</td>
+                        <td data-label="Creado" style="padding:8px">{{ u.date_joined }}</td>
+                        <td data-label="Último login" style="padding:8px">{{ u.last_login }}</td>
+                        <td data-label="Acciones" style="padding:8px">
+                            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                                 <a href="{% url 'admin_user_ramos' u.id %}" class="btn-secondary" style="text-decoration:none; padding:6px 8px;">Ver Ramos</a>
                                 <form method="post" action="{% url 'admin_delete_user' u.id %}" style="margin:0;">
                                     {% csrf_token %}
@@ -107,6 +107,29 @@
     /* On small screens keep table responsive */
     @media (max-width: 991px) {
         .calculator-card table { table-layout: auto; }
+    }
+
+    /* Convert table to stacked cards on small screens */
+    @media (max-width: 768px) {
+        .calculator-card { padding: calc(var(--spacing-md)); }
+        .calculator-card thead { display: none; }
+        .calculator-card table, .calculator-card tbody, .calculator-card tr { display: block; width: 100%; }
+        .calculator-card tr { margin-bottom: 12px; border-bottom: 1px solid var(--divider-color); padding-bottom: 8px; }
+        .calculator-card td {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border: 0;
+        }
+        .calculator-card td:before {
+            content: attr(data-label) ":";
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-right: 8px;
+            flex: 0 0 auto;
+        }
+        .calculator-card td > .btn-remove, .calculator-card td > .btn-secondary { margin-left: 8px; }
+        .calculator-card td[data-label="Acciones"] { display: flex; gap: 8px; justify-content: flex-end; }
     }
 </style>
 {% endblock %}
