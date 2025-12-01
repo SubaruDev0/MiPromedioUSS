@@ -267,7 +267,14 @@ function toggleNotaObjetivoRamo(selectElement) {
     if (tipo === 'custom') {
         customContainer.style.display = 'block';
     } else {
-        customContainer.style.display = 'none';
+        // Hide and clear the custom input when switching back to "pasar"
+        if (customContainer) {
+            const input = customContainer.querySelector('.nota-objetivo-custom-input');
+            if (input) {
+                input.value = '';
+            }
+            customContainer.style.display = 'none';
+        }
         // Si selecciona "pasar es pasar", guardar 39.5
         guardarNotaObjetivo(ramoId, 39.5, courseCard);
     }
@@ -462,6 +469,9 @@ function toggleNotaObjetivoInput() {
     if (tipo === 'custom') {
         customContainer.style.display = 'block';
     } else {
+        // Hide and clear the custom input when switching to "pasar"
+        const input = document.getElementById('nota-objetivo-custom');
+        if (input) input.value = '';
         customContainer.style.display = 'none';
     }
     calculateGuest();
