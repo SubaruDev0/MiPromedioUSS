@@ -14,65 +14,6 @@ function toggleCourse(header) {
     }
 }
 
-/* Global input clamping and form weight validation */
-document.addEventListener('input', function (e) {
-    const el = e.target;
-    if (!el) return;
-
-    // Notas (guest calculator inputs and grade-pill etc.)
-    if (el.classList && (el.classList.contains('grade-input') || el.classList.contains('grade-pill') || el.id === 'repete-grade')) {
-        if (el.value === '') return;
-        let v = parseFloat(el.value);
-        if (isNaN(v)) { el.value = ''; return; }
-        if (v < 10) v = 10;
-        if (v > 70) v = 70;
-        if (v !== parseFloat(el.value)) el.value = v;
-    }
-
-    // Pesos
-    if (el.classList && el.classList.contains('weight-input')) {
-        if (el.value === '') return;
-        let w = parseFloat(el.value);
-        if (isNaN(w)) { el.value = ''; return; }
-        if (w < 0) w = 0;
-        if (w > 100) w = 100;
-        if (w !== parseFloat(el.value)) el.value = w;
-    }
-});
-
-function validateWeightsSumForForm(formEl) {
-    if (!formEl) return true;
-    const weights = Array.from(formEl.querySelectorAll('input[name="eval_weights[]"], input[name="eval_existing_weights[]"]'));
-    let total = 0;
-    weights.forEach(i => { total += parseFloat(i.value) || 0; });
-    // Accept small floating point rounding
-    return Math.abs(total - 100) < 0.001;
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const addForm = document.getElementById('add-course-form');
-    if (addForm) {
-        addForm.addEventListener('submit', function (e) {
-            if (!validateWeightsSumForForm(addForm)) {
-                e.preventDefault();
-                alert('La suma de porcentajes debe ser exactamente 100%. Ajusta las ponderaciones antes de guardar.');
-                return false;
-            }
-        });
-    }
-
-    const editForm = document.getElementById('edit-course-form');
-    if (editForm) {
-        editForm.addEventListener('submit', function (e) {
-            if (!validateWeightsSumForForm(editForm)) {
-                e.preventDefault();
-                alert('La suma de porcentajes debe ser exactamente 100%. Ajusta las ponderaciones antes de guardar.');
-                return false;
-            }
-        });
-    }
-});
-
 /**
  * Función principal para calcular el promedio y la nota necesaria
  * Se ejecuta cada vez que el usuario edita una nota

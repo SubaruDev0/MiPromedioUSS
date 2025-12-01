@@ -15,7 +15,346 @@
             <div id="nota-objetivo-custom-container" style="display: none;">
                 <input type="number" id="nota-objetivo-custom" class="grade-input" placeholder="Ingresa tu nota objetivo (10-70)" min="10" max="70" step="0.1" oninput="calculateGuest()">
             </div>
-        
+        </div>
+
+        <div id="grades-container">
+            <!-- Initial Rows -->
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="Ej: 55" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="Ej: 25" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+            <div class="grade-row">
+                <div class="input-group">
+                    <label>Nota (10-70)</label>
+                    <input type="number" class="grade-input" placeholder="" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Porcentaje (%)</label>
+                    <input type="number" class="weight-input" placeholder="" min="0" max="100"
+                        oninput="calculateGuest()">
+                </div>
+                <button class="btn-remove" onclick="removeRow(this)"><i class="fas fa-minus"></i></button>
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button class="btn-secondary" onclick="clearCalculator()">Limpiar</button>
+            <button class="btn-primary" onclick="addRow()"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <!-- Repete Section (Hidden by default) -->
+        <div id="repete-section" class="repete-section" style="display: none;">
+            <div class="alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Promedio bajo 39.5. Deberás dar el Repete.</span>
+            </div>
+
+            <div class="repete-controls">
+                <div class="input-group">
+                    <label>Nota Repete</label>
+                    <input type="number" id="repete-grade" class="grade-input" placeholder="Ej: 50" min="10" max="70"
+                        oninput="calculateGuest()">
+                </div>
+                <div class="input-group">
+                    <label>Modo de Reemplazo</label>
+                    <select id="repete-mode" onchange="calculateGuest()">
+                        <option value="lowest">Reemplazar nota más baja</option>
+                        <option value="highest_weight">Reemplazar % más alto</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div class="result-box">
+                <div class="result-label">Promedio</div>
+                <div class="result-value" id="guest-average">--</div>
+            </div>
+            <div class="result-box">
+                <div class="result-label">Promedio Final</div>
+                <div class="result-value" id="guest-final-average">--</div>
+            </div>
+        </div>
+
+        <!-- Mensaje de resultado -->
+        <div id="resultado-mensaje" style="display: none; margin-top: 20px; padding: 15px; border-radius: var(--radius-sm); text-align: center; font-weight: 600; font-size: 1.1rem;">
+            <i id="resultado-icono" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+            <span id="resultado-texto"></span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .calculator-card {
+        background: var(--card-bg);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .grade-row {
+        display: flex;
+        gap: var(--spacing-md);
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .input-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .input-group label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .grade-input,
+    .weight-input,
+    select {
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-size: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .grade-input:focus,
+    .weight-input:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(0, 45, 114, 0.1);
+    }
+
+    .btn-remove {
+        background: #FFEBEE;
+        color: var(--danger-color);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        margin-bottom: 1px;
+        /* Align with input */
+    }
+
+    .btn-remove:hover {
+        background: #FFCDD2;
+    }
+
+    .actions-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 10px 20px;
+        border-radius: var(--radius-pill);
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-light);
+        transform: scale(1.05);
+    }
+
+    .btn-secondary {
+        background: #E0E0E0;
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+        background: #D6D6D6;
+    }
+
+    .results-container {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+        padding-top: var(--spacing-lg);
+        border-top: 1px solid var(--divider-color);
+    }
+
+    .result-box {
+        flex: 1;
+        background: #333;
+        /* Dark background like reference */
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        color: white;
+    }
+
+    .result-label {
+        font-size: 0.8rem;
+        opacity: 0.8;
+        margin-bottom: 4px;
+    }
+
+    .result-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .repete-section {
+        background: #FFF3CD;
+        border: 1px solid #FFEEBA;
+        border-radius: var(--radius-sm);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .alert-warning {
+        color: #856404;
+        font-weight: 600;
+        margin-bottom: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .repete-controls {
+        display: flex;
+        gap: var(--spacing-md);
+    }
+
+    /* Mobile: compact layout for quick calculator */
+    @media (max-width: 480px) {
+        .calculator-card {
+            padding: calc(var(--spacing-xs));
+            max-width: 380px;
+            margin: 0 10px;
+        }
+
+        /* Make each grade row compact: note and % side-by-side, delete button right */
+        .grade-row {
+            flex-direction: row;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        /* Show compact labels above each input (small) */
+        .grade-row .input-group label { 
+            display: block;
+            font-size: 0.72rem;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Inputs share row space */
+        /* Proportions: nota wider, percent narrower */
+        .grade-row .input-group:first-child { flex: 0 0 60%; margin: 0; }
+        .grade-row .input-group:nth-child(2) { flex: 0 0 30%; margin: 0; }
+
+        /* ensure inner input uses full width */
+        .grade-row .input-group input,
+        .grade-row .input-group select { width: 100%; box-sizing: border-box; }
+
+        .grade-input,
+        .weight-input,
+        select {
+            padding: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* Small remove button aligned to the right */
+        .btn-remove {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            margin-left: 6px;
+            align-self: center;
+        }
+
+        .actions-row { flex-direction: row; gap: 8px; }
+
+        .btn-primary { width: 44px; height: 44px; font-size: 1rem; }
+
+        .results-container { flex-direction: column; gap: 10px; }
+
+        .result-value { font-size: 1.25rem; }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 <script>
     function addRow() {

@@ -141,19 +141,3 @@ Este proyecto no incluye licencia por defecto. Si lo deseas añade un `LICENSE` 
 
 Si quieres que lo cree en el repo ahora, lo agrego (o ajusto el contenido a tu público: más técnico, más corto, con badges, etc.).
 
-## Cambios recientes (resumen)
-
-- Validaciones servidor/cliente: ahora ningún formulario permite notas fuera del rango 10–70 (se clampa en cliente y servidor).
-- Los formularios de creación/edición de `Ramo` requieren que la suma de ponderaciones sea exactamente 100% (validación cliente y servidor).
-- Campo `Carrera` en el registro: ahora es selección obligatoria desde una lista abreviada de carreras USS.
-- Corrección visual: hover en botones primarios ya no oculta el texto (texto forzado a blanco en hover).
-- Mejoras responsive: calculadora rápida y panel de administración adaptativos para móvil y escritorio (tabla convierte a tarjetas en pantallas pequeñas).
-
-Por favor revisa las secciones anteriores para instrucciones de despliegue y pruebas.
-
-## Mejoras UI/UX
-
-- Se centralizaron estilos en `static/css/uss-styles.css` y se mejoró la responsividad general.
-- Calculadora rápida y panel de administración tienen layouts optimizados para móvil y escritorio.
-- Mejor contraste y comportamiento en hover para botones primarios.
-
