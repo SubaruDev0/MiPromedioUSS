@@ -319,10 +319,25 @@ def add_course(request):
                 is_historical=False
             )
 
-            # Crear Evaluaciones
+            # Validar ponderaciones: la suma debe ser 100
             eval_names = request.POST.getlist('eval_names[]')
             eval_weights = request.POST.getlist('eval_weights[]')
             eval_types = request.POST.getlist('eval_types[]')
+
+            # Convertir a float y sumar
+            weights_floats = []
+            for w in eval_weights:
+                try:
+                    weights_floats.append(float(w))
+                except Exception:
+                    weights_floats.append(0.0)
+
+            total_weights = sum(weights_floats)
+            if abs(total_weights - 100.0) > 0.2:
+                # Eliminar el ramo recién creado para evitar datos corruptos
+                ramo.delete()
+                messages.error(request, f'La suma de ponderaciones debe ser 100%. Actualmente suma: {total_weights:.2f}%')
+                return redirect('add_course')
 
             for i in range(len(eval_names)):
                 if eval_names[i] and eval_weights[i]:
@@ -390,6 +405,22 @@ def edit_course(request, ramo_id):
             eval_weights = request.POST.getlist('eval_weights[]')
             eval_types = request.POST.getlist('eval_types[]')
 
+            # Validar suma de ponderaciones (existentes actualizadas + nuevas)
+            # Calcular total: ponderaciones existentes ya actualizadas + nuevas
+            new_weights = []
+            for w in eval_weights:
+                try:
+                    new_weights.append(float(w))
+                except Exception:
+                    new_weights.append(0.0)
+
+            total_existing = sum(e.ponderacion for e in ramo.evaluaciones.all())
+            total_new = sum(new_weights)
+            total_all = total_existing + total_new
+            if abs(total_all - 100.0) > 0.2:
+                messages.error(request, f'La suma de ponderaciones después de la edición debe ser 100%. Actualmente suma: {total_all:.2f}%')
+                return redirect('edit_course', ramo_id=ramo.id)
+
             for i in range(len(eval_names)):
                 if eval_names[i] and eval_weights[i]:
                     Evaluacion.objects.create(
@@ -454,7 +485,16 @@ def save_grade(request, evaluacion_id):
         print(f"[DEBUG] Guardando nota para evaluacion {evaluacion_id}: '{nota}' (tipo: {type(nota)})")
 
         if nota is not None and nota != '':
-            evaluacion.nota = float(nota)
+            try:
+                nota_val = float(nota)
+            except Exception:
+                return JsonResponse({'success': False, 'error': 'Nota inválida'}, status=400)
+
+            # Validar rango estricto 10-70
+            if nota_val < 10 or nota_val > 70:
+                return JsonResponse({'success': False, 'error': 'La nota debe estar entre 10 y 70'}, status=400)
+
+            evaluacion.nota = nota_val
         else:
             evaluacion.nota = None
 

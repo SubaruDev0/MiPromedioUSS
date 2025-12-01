@@ -394,6 +394,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configurar listeners para repete
     setupRepeteListeners();
+    
+    // Global input clamping and validation: grades (10-70), weights (0-100)
+    document.body.addEventListener('input', function(e) {
+        const tgt = e.target;
+        if (!tgt) return;
+
+        // grade inputs used across templates
+        if (tgt.classList && (tgt.classList.contains('grade-pill') || tgt.classList.contains('grade-input'))) {
+            let v = parseFloat(tgt.value);
+            if (isNaN(v)) return;
+            if (v > 70) tgt.value = 70;
+            if (v < 10) {
+                // allow typing small numbers, only enforce minimum when blurred
+                // but keep a hard floor at 0 in case someone enters negative
+                if (v < 0) tgt.value = 10;
+            }
+        }
+
+        if (tgt.classList && (tgt.classList.contains('weight-input') || tgt.classList.contains('grade-input') && tgt.type === 'number')) {
+            let w = parseFloat(tgt.value);
+            if (isNaN(w)) return;
+            if (w > 100) tgt.value = 100;
+            if (w < 0) tgt.value = 0;
+        }
+    }, { capture: true });
 });
 
 /**
