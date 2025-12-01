@@ -1,4 +1,4 @@
-#!/home/subaru/Escritorio/mi_promedio_uss/venv/bin/python3
+#!/home/subaru/Escritorio/mi_promedio_uss/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
