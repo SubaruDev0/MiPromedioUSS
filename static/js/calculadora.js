@@ -401,7 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tgt) return;
 
         // grade inputs used across templates
-        if (tgt.classList && (tgt.classList.contains('grade-pill') || tgt.classList.contains('grade-input'))) {
+        // Exclude `asistencia` (attendance) fields from grade clamping
+        const nameLower = (tgt.name || '').toLowerCase();
+        const idLower = (tgt.id || '').toLowerCase();
+        const isAsistenciaField = nameLower === 'asistencia' || idLower === 'asistencia';
+
+        if (tgt.classList && (tgt.classList.contains('grade-pill') || (tgt.classList.contains('grade-input') && !isAsistenciaField))) {
             let v = parseFloat(tgt.value);
             if (isNaN(v)) return;
             if (v > 70) tgt.value = 70;
@@ -412,7 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (tgt.classList && (tgt.classList.contains('weight-input') || tgt.classList.contains('grade-input') && tgt.type === 'number')) {
+        // Weight inputs (0-100). Also include asistencia here since it's a percent field.
+        if (tgt.classList && (tgt.classList.contains('weight-input') || isAsistenciaField)) {
             let w = parseFloat(tgt.value);
             if (isNaN(w)) return;
             if (w > 100) tgt.value = 100;
