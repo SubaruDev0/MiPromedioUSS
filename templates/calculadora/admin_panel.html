@@ -1,7 +1,7 @@
 {% extends 'calculadora/base.html' %}
 
 {% block content %}
-<div class="container" style="padding-top: 20px;">
+<div class="container admin-centered" style="padding-top: 20px;">
     <div class="calculator-card">
         <h2 style="color: var(--primary-color); margin-bottom: 10px;">Panel de Administración</h2>
 
@@ -58,4 +58,55 @@
         </div>
     </div>
 </div>
+<style>
+    /* Desktop: make admin panel wider and centered */
+    .container.admin-centered {
+        display: flex;
+        justify-content: center;
+    }
+
+    @media (min-width: 992px) {
+        .calculator-card {
+            max-width: 1100px;
+            width: 80%;
+            min-width: 820px;
+            margin: 0 auto;
+            padding: calc(var(--spacing-lg) + 8px);
+        }
+    }
+
+    /* Table styling: allow wrapping and better spacing to avoid horizontal scroll */
+    .calculator-card .table-wrapper {
+        width: 100%;
+        overflow: visible;
+    }
+
+    .calculator-card table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+
+    .calculator-card th, .calculator-card td {
+        padding: 8px 10px;
+        font-size: 0.95rem;
+        white-space: normal;
+        vertical-align: middle;
+    }
+
+    .calculator-card thead th { font-weight: 700; }
+
+    .calculator-card tbody tr td .btn-secondary { padding: 6px 10px; font-size: 0.92rem; }
+    .calculator-card tbody tr td .btn-remove { padding: 6px 10px; font-size: 0.92rem; }
+
+    /* Reduce excessive left/right margins on very large screens */
+    @media (min-width: 1400px) {
+        .calculator-card { width: 70%; max-width: 1400px; }
+    }
+
+    /* On small screens keep table responsive */
+    @media (max-width: 991px) {
+        .calculator-card table { table-layout: auto; }
+    }
+</style>
 {% endblock %}
