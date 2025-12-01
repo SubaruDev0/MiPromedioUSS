@@ -282,11 +282,21 @@ function toggleNotaObjetivoRamo(selectElement) {
 
 function updateNotaObjetivoCustom(inputElement) {
     const courseCard = inputElement.closest('.course-card');
-    const customValue = parseFloat(inputElement.value);
+    // Clamp input to valid range immediately
+    let customValue = parseFloat(inputElement.value);
+    if (!isNaN(customValue)) {
+        if (customValue > 70) { customValue = 70; inputElement.value = 70; }
+        if (customValue < 10) { customValue = 10; inputElement.value = 10; }
+    }
     const ramoId = inputElement.getAttribute('data-ramo-id');
 
     if (!isNaN(customValue) && customValue >= 10 && customValue <= 70) {
         guardarNotaObjetivo(ramoId, customValue, courseCard);
+    } else {
+        // invalid value => if it's numeric it's already clamped above, call guardar
+        if (!isNaN(customValue)) {
+            guardarNotaObjetivo(ramoId, customValue, courseCard);
+        }
     }
 }
 
@@ -401,6 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configurar listeners para repete
     setupRepeteListeners();
+    // Configurar clamps para inputs de nota objetivo (guest y por ramo)
+    setupNotaObjetivoClamps();
     
     // Global input clamping and validation: grades (10-70), weights (0-100)
     document.body.addEventListener('input', function(e) {
@@ -475,6 +487,39 @@ function toggleNotaObjetivoInput() {
         customContainer.style.display = 'none';
     }
     calculateGuest();
+}
+
+// Attach clamp listeners for guest and ramo custom inputs
+function setupNotaObjetivoClamps() {
+    // Guest calculator
+    const guestInput = document.getElementById('nota-objetivo-custom');
+    if (guestInput) {
+        guestInput.addEventListener('input', function() {
+            let v = parseFloat(this.value);
+            if (isNaN(v)) return;
+            if (v > 70) this.value = 70;
+            if (v < 10) this.value = 10;
+            calculateGuest();
+        });
+    }
+
+    // Ramo custom inputs (may be multiple)
+    document.querySelectorAll('.nota-objetivo-custom-input').forEach(inp => {
+        inp.addEventListener('input', function() {
+            let v = parseFloat(this.value);
+            if (isNaN(v)) return;
+            if (v > 70) this.value = 70;
+            if (v < 10) this.value = 10;
+        });
+        // also clamp on blur and save
+        inp.addEventListener('change', function() {
+            let v = parseFloat(this.value);
+            if (isNaN(v)) return;
+            if (v > 70) this.value = 70;
+            if (v < 10) this.value = 10;
+            updateNotaObjetivoCustom(this);
+        });
+    });
 }
 
 function calculateGuest() {
