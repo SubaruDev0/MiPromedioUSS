@@ -324,12 +324,32 @@ def add_course(request):
             eval_weights = request.POST.getlist('eval_weights[]')
             eval_types = request.POST.getlist('eval_types[]')
 
+            # VALIDACIÓN SERVIDOR: pesos obligatorios y suman 100
+            weights = []
+            for w in eval_weights:
+                try:
+                    weights.append(float(w))
+                except Exception:
+                    weights.append(0.0)
+
+            total_weights = round(sum(weights), 4)
+            if total_weights != 100.0:
+                messages.error(request, 'La suma de porcentajes de las evaluaciones debe ser exactamente 100%.')
+                ramo.delete()
+                return render(request, 'calculadora/add_course.html', {'anio_choices': Ramo.ANIO_CHOICES, 'form_data': request.POST})
+
             for i in range(len(eval_names)):
                 if eval_names[i] and eval_weights[i]:
+                    # Clamp ponderacion a 0-100 por seguridad
+                    try:
+                        ponder = float(eval_weights[i])
+                    except Exception:
+                        ponder = 0.0
+                    ponder = max(0.0, min(100.0, ponder))
                     Evaluacion.objects.create(
                         nombre=eval_names[i],
                         tipo=eval_types[i],
-                        ponderacion=float(eval_weights[i]),
+                        ponderacion=ponder,
                         ramo=ramo
                     )
             # Añadir notificación en cache para el usuario
@@ -382,20 +402,46 @@ def edit_course(request, ramo_id):
             for i in range(len(eval_ids)):
                 if eval_ids[i] and eval_existing_weights[i]:
                     evaluacion = Evaluacion.objects.get(id=eval_ids[i], ramo=ramo)
-                    evaluacion.ponderacion = float(eval_existing_weights[i])
+                    try:
+                        p = float(eval_existing_weights[i])
+                    except Exception:
+                        p = 0.0
+                    evaluacion.ponderacion = max(0.0, min(100.0, p))
                     evaluacion.save()
 
             # Agregar nuevas evaluaciones
             eval_names = request.POST.getlist('eval_names[]')
             eval_weights = request.POST.getlist('eval_weights[]')
             eval_types = request.POST.getlist('eval_types[]')
+            # VALIDACIÓN SERVIDOR: comprobar que la suma total (existentes + nuevas) sea 100
+            existing = [float(w) for w in eval_existing_weights if w not in (None, '', [])]
+            new = []
+            for w in eval_weights:
+                try:
+                    new.append(float(w))
+                except Exception:
+                    new.append(0.0)
+
+            total_weights = round(sum(existing) + sum(new), 4)
+            if total_weights != 100.0:
+                messages.error(request, 'La suma de porcentajes de las evaluaciones debe ser exactamente 100%.')
+                return render(request, 'calculadora/edit_course.html', {
+                    'ramo': ramo,
+                    'anio_choices': Ramo.ANIO_CHOICES,
+                    'total_peso_existente': sum(eval.ponderacion for eval in ramo.evaluaciones.all())
+                })
 
             for i in range(len(eval_names)):
                 if eval_names[i] and eval_weights[i]:
+                    try:
+                        ponder = float(eval_weights[i])
+                    except Exception:
+                        ponder = 0.0
+                    ponder = max(0.0, min(100.0, ponder))
                     Evaluacion.objects.create(
                         nombre=eval_names[i],
                         tipo=eval_types[i],
-                        ponderacion=float(eval_weights[i]),
+                        ponderacion=ponder,
                         ramo=ramo
                     )
             
@@ -454,7 +500,14 @@ def save_grade(request, evaluacion_id):
         print(f"[DEBUG] Guardando nota para evaluacion {evaluacion_id}: '{nota}' (tipo: {type(nota)})")
 
         if nota is not None and nota != '':
-            evaluacion.nota = float(nota)
+            try:
+                n = float(nota)
+            except Exception:
+                return JsonResponse({'success': False, 'error': 'Nota inválida'}, status=400)
+            # Clamp nota a rango 10-70
+            if n < 10: n = 10
+            if n > 70: n = 70
+            evaluacion.nota = n
         else:
             evaluacion.nota = None
 

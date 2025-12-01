@@ -584,6 +584,13 @@ input::placeholder {
     box-shadow: var(--shadow-lg);
 }
 
+/* Ensure text remains visible on hover (fix for username save button) */
+.btn-primary,
+.btn-primary span,
+.btn-primary i {
+    color: #ffffff !important;
+}
+
 .btn-primary:active {
     transform: translateY(0);
 }

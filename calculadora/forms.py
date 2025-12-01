@@ -34,11 +34,30 @@ class RegistroUsuarioForm(UserCreationForm):
         required=False,
         widget=forms.EmailInput(attrs={'class': 'grade-input', 'placeholder': 'ejemplo@uss.cl'})
     )
-    carrera = forms.CharField(
+    # Lista simplificada y abreviada de carreras por áreas (el usuario debe elegir una)
+    CARRERAS_CHOICES = [
+        ('Medicina', 'Medicina'),
+        ('Odontología', 'Odontología'),
+        ('Enfermería', 'Enfermería'),
+        ('Nutrición', 'Nutrición y Dietética'),
+        ('Kinesiología', 'Kinesiología'),
+        ('Fonoaudiología', 'Fonoaudiología'),
+        ('Ingeniería Civil', 'Ingeniería Civil'),
+        ('Ing. Civil Industrial', 'Ingeniería Civil Industrial'),
+        ('Ing. Civil en Informática', 'Ingeniería Civil en Informática'),
+        ('Ingeniería Comercial', 'Ingeniería Comercial'),
+        ('Derecho', 'Derecho'),
+        ('Psicología', 'Psicología'),
+        ('Arquitectura', 'Arquitectura'),
+        ('Animación Digital', 'Animación Digital')
+    ]
+
+    carrera = forms.ChoiceField(
         label='Carrera',
-        max_length=100,
-        widget=forms.TextInput(attrs={'class': 'grade-input', 'placeholder': 'Ej: Ingeniería Civil Informática'}),
-        required=True
+        choices=CARRERAS_CHOICES,
+        widget=forms.Select(attrs={'class': 'grade-input'}),
+        required=True,
+        help_text='Elige una carrera de la lista'
     )
 
     class Meta:
